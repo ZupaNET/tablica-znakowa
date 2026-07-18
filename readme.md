@@ -12,4 +12,4 @@ Prosty emulator tablicy LED firmy MKEiA.
 - `--ip <adres IP>` - pozwala ustawić adres IP, na którym nasłuchuje serwer  
 - `--port <port>` - pozwala zmienić port, na którym nasłuchuje serwer  
 - `--padding <padding>` - pozwala zmienić padding ekranu  
-- `--fulscreen` - uruchamia aplikację pełnoekranowo  
+- `--fullscreen` - uruchamia aplikację pełnoekranowo  

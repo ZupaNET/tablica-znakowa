@@ -14,6 +14,14 @@
 #define MAX_LINES 12
 #define PADDING 8
 
+struct Config
+{
+    char ip[64];
+    int port;
+    int padding;
+    bool fullscreen;
+};
+
 struct DisplayState
 {
     char* lines[MAX_LINES];
@@ -28,6 +36,8 @@ struct Client
     size_t used;
     char ip[64];
 };
+
+static struct Config cfg;
 
 static SDL_Window *window = nullptr;
 static SDL_Renderer *renderer = nullptr;
@@ -72,12 +82,12 @@ static void DetachConsoleIfOwned()
 }
 #endif
 
-static int GetLineSpacing(const TTF_Font *font)
+static float GetMaxLines(const TTF_Font *font)
 {
-    if (font == miniset2_font) return 10;
-    if (font == miniforma2_font) return 12;
-    if (font == sans_serif_font) return 14;
-    return 10;
+    if (font == miniset2_font) return (float)MAX_LINES;
+    if (font == miniforma2_font) return 10.0f;
+    if (font == sans_serif_font) return 9.0f;
+    return (float)MAX_LINES;
 }
 
 static void SwapDisplayBuffers()
@@ -106,7 +116,7 @@ static void ParseCommand(struct Client *client, const char *line)
         event.type = SDL_EVENT_QUIT;
         SDL_PushEvent(&event);
 
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] [%s] Zażądano zamknięcia tablicy!", client->ip);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: [%s] Zażądano zamknięcia tablicy!", client->ip);
     }
     else if (SDL_strncmp(line, "l", 1) == 0)
     {
@@ -130,7 +140,7 @@ static void ParseCommand(struct Client *client, const char *line)
 
         SDL_strlcpy(back_buffer->lines[line_number], line_begin, line_length + 1);
 
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] [%s] Załadowano linię %d: %s", client->ip, line_number, back_buffer->lines[line_number]);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: [%s] Załadowano linię %d: %s", client->ip, line_number, back_buffer->lines[line_number]);
     }
     else if (SDL_strncmp(line, "f", 1) == 0)
     {
@@ -156,12 +166,12 @@ static void ParseCommand(struct Client *client, const char *line)
                 break;
         }
 
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] [%s] Zmieniono czcionkę: %d", client->ip, font_number);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: [%s] Zmieniono czcionkę: %d", client->ip, font_number);
     }
     else if (SDL_strncmp(line, "go0", 3) == 0)
     {
         SwapDisplayBuffers();
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] [%s] Wyświetlono bufor na tablicy", client->ip);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: [%s] Wyświetlono bufor na tablicy", client->ip);
     }
     else if (SDL_strncmp(line, "j", 1) == 0)
     {
@@ -173,7 +183,7 @@ static void ParseCommand(struct Client *client, const char *line)
             return;
 
         back_buffer->brightness = brightness;
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] [%s] Ustawiono nową jasność: %d", client->ip, brightness);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: [%s] Ustawiono nową jasność: %d", client->ip, brightness);
     }
     else if (SDL_strncmp(line, "wy0", 3) == 0)
     {
@@ -181,7 +191,7 @@ static void ParseCommand(struct Client *client, const char *line)
         front_buffer->brightness = back_buffer->brightness;
         SDL_UnlockMutex(buffer_mutex);
 
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] [%s] Zatwierdzono nową jasność", client->ip);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: [%s] Zatwierdzono nową jasność", client->ip);
     }
 
 }
@@ -315,16 +325,31 @@ static bool CreateServer()
 {
     SDL_SetAtomicInt(&server_running, 1);
 
-    server = NET_CreateServer(nullptr, SERVER_PORT, 0);
+    NET_Address *addr = NET_ResolveHostname(cfg.ip);
+    if (!addr)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można sparsować adresu IP: %s\n", SDL_GetError());
+        return false;
+    }
+
+    NET_Status status = NET_WaitUntilResolved(addr, 5000);
+    if (status != NET_SUCCESS)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można rozwiązać adresu IP: %s\n", SDL_GetError());
+        NET_UnrefAddress(addr);
+        return false;
+    }
+
+    server = NET_CreateServer(addr, cfg.port, 0);
     if (!server)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"[ERROR] Nie można utworzyć serwera: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można utworzyć serwera: %s\n", SDL_GetError());
         return false;
     }
 
     server_thread = SDL_CreateThread(ServerThread, "Server", nullptr);
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Uruchomiono serwer na porcie %d", SERVER_PORT);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Uruchomiono serwer %s:%d", cfg.ip, cfg.port);
     return true;
 }
 
@@ -333,21 +358,21 @@ static bool LoadFonts()
     miniset2_font = TTF_OpenFontIO(SDL_IOFromConstMem(MiniSet2_ttf, MiniSet2_ttf_len), true, 64.0f);
     if (!miniset2_font)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"[ERROR] Nie można załadować czcionki MiniSet2: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować czcionki MiniSet2: %s\n", SDL_GetError());
         return false;
     }
 
     miniforma2_font = TTF_OpenFontIO(SDL_IOFromConstMem(MiniForma2_ttf, MiniForma2_ttf_len), true, 64.0f);
     if (!miniforma2_font)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"[ERROR] Nie można załadować czcionki MiniForma2: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować czcionki MiniForma2: %s\n", SDL_GetError());
         return false;
     }
 
     sans_serif_font = TTF_OpenFontIO(SDL_IOFromConstMem(sans_serif_ttf, sans_serif_ttf_len), true, 64.0f);
     if (!sans_serif_font)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"[ERROR] Nie można załadować czcionki Sans Serif: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować czcionki Sans Serif: %s\n", SDL_GetError());
         return false;
     }
 
@@ -377,7 +402,7 @@ static void InitDisplayBuffers()
     buffer2.lines[0][0] = '.'; buffer2.lines[0][1] = '\0';
 }
 
-void PrintHeader()
+static void PrintHeader()
 {
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"\n");
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"          ┏┳┓╻┏ ┏━╸╻┏━┓      \n");
@@ -386,54 +411,84 @@ void PrintHeader()
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"\n");
 }
 
+static void ParseArgs(int argc, char* argv[])
+{
+    strcpy(cfg.ip, "0.0.0.0");
+    cfg.port = SERVER_PORT;
+    cfg.padding = PADDING;
+    cfg.fullscreen = false;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--ip") == 0 && i + 1 < argc)
+        {
+            strncpy(cfg.ip, argv[++i], sizeof(cfg.ip)-1);
+        }
+        else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc)
+        {
+            cfg.port = strtol(argv[++i], nullptr, 10);
+        }
+        else if (strcmp(argv[i], "--padding") == 0 && i + 1 < argc)
+        {
+            cfg.padding = strtol(argv[++i], nullptr, 10);
+        }
+        else if (strcmp(argv[i], "--fullscreen") == 0)
+        {
+            cfg.fullscreen = true;
+        }
+    }
+}
+
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
 #ifdef _WIN32
     DetachConsoleIfOwned();
 #endif
 
+    ParseArgs(argc, argv);
     PrintHeader();
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Ładowanie aplikacji vMKEiA");
-    if (!SDL_CreateWindowAndRenderer("vMKEiA - Wirtualna tablica LED", 1024, 768, SDL_WINDOW_RESIZABLE, &window, &renderer))
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie aplikacji vMKEiA");
+    if (!SDL_CreateWindowAndRenderer("vMKEiA - Wirtualna tablica LED", 1024, 768, cfg.fullscreen ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE, &window, &renderer))
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"[ERROR] Nie można utworzyć okna i renderera: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można utworzyć okna i silnika renderującego: %s\n", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Ładowanie podsystemu sieciowego");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie podsystemu sieciowego");
     if (!NET_Init())
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"[ERROR] Nie można załadować SDL_net: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować SDL_net: %s\n", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Ładowanie podsystemu czcionek");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie podsystemu czcionek");
     if (!TTF_Init())
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"[ERROR] Nie można załadować SDL_ttf: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować SDL_ttf: %s\n", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Ładowanie czcionek");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie czcionek");
     if (!LoadFonts())
         return SDL_APP_FAILURE;
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Inicjalizacja buforów");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Inicjalizacja buforów");
     InitDisplayBuffers();
     buffer_mutex = SDL_CreateMutex();
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Ładowanie serwera");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie serwera");
     if (!CreateServer())
         return SDL_APP_FAILURE;
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Aplikacja vMKEiA jest gotowa do działania!");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Aplikacja vMKEiA jest gotowa do działania!");
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
-    if (event->type == SDL_EVENT_QUIT)
+    if (event->type == SDL_EVENT_QUIT ||
+        (event->type == SDL_EVENT_KEY_DOWN && event->key.key == SDLK_ESCAPE))
         return SDL_APP_SUCCESS;
 
     return SDL_APP_CONTINUE;
@@ -460,7 +515,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_GetRenderOutputSize(renderer, &screen_w, &screen_h);
 
     const float factor = (float)state->brightness / 4.0f;
-    const SDL_Color base = {255, 69, 0, 255};
+    const SDL_Color base = {255, 0, 0, 255};
     const SDL_Color color =
     {
         .r = (Uint8)((float)base.r * factor),
@@ -469,17 +524,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         .a = 255
     };
 
-    int font_height = TTF_GetFontHeight(state->font);
-    int spacing = GetLineSpacing(state->font);
+    float line_height = (float)TTF_GetFontHeight(state->font);
+    float available_height = (float)screen_h - (float)cfg.padding * 2;
+    float scale = available_height / (line_height * GetMaxLines(state->font));
 
-    float line_height = (float)(font_height + spacing);
-
-    float available_height = (float)screen_h - (PADDING * 2);
-
-    float scale = available_height / (line_height * MAX_LINES);
-
-    int x = PADDING;
-    float y = PADDING;
+    float y = (float)cfg.padding;
 
     for (int i = 0; i < MAX_LINES; i++)
     {
@@ -500,7 +549,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         }
 
         SDL_FRect dst = {
-            .x = (float)x,
+            .x = (float)cfg.padding,
             .y = y,
             .w = (float)surface->w * scale,
             .h = (float)surface->h * scale
@@ -523,7 +572,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "[INFO] Zamykam aplikację!");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Zamykam aplikację!");
 
     if (miniset2_font)
         TTF_CloseFont(miniset2_font);

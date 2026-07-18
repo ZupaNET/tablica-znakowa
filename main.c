@@ -413,7 +413,7 @@ static void PrintHeader()
 
 static void ParseArgs(int argc, char* argv[])
 {
-    strcpy(cfg.ip, "0.0.0.0");
+    SDL_strlcpy(cfg.ip, "0.0.0.0", sizeof(cfg.ip)-1);
     cfg.port = SERVER_PORT;
     cfg.padding = PADDING;
     cfg.fullscreen = false;
@@ -422,15 +422,15 @@ static void ParseArgs(int argc, char* argv[])
     {
         if (strcmp(argv[i], "--ip") == 0 && i + 1 < argc)
         {
-            strncpy(cfg.ip, argv[++i], sizeof(cfg.ip)-1);
+            SDL_strlcpy(cfg.ip, argv[++i], sizeof(cfg.ip)-1);
         }
         else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc)
         {
-            cfg.port = strtol(argv[++i], nullptr, 10);
+            cfg.port = SDL_strtol(argv[++i], nullptr, 10);
         }
         else if (strcmp(argv[i], "--padding") == 0 && i + 1 < argc)
         {
-            cfg.padding = strtol(argv[++i], nullptr, 10);
+            cfg.padding = SDL_strtol(argv[++i], nullptr, 10);
         }
         else if (strcmp(argv[i], "--fullscreen") == 0)
         {

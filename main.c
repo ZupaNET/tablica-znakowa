@@ -449,7 +449,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     PrintHeader();
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie aplikacji vMKEiA");
-    if (!SDL_CreateWindowAndRenderer("vMKEiA - Wirtualna tablica LED", 1024, 768, cfg.fullscreen ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE, &window, &renderer))
+    if (!SDL_CreateWindowAndRenderer("vMKEiA - Wirtualna tablica LED", 1152 + cfg.padding, 768, cfg.fullscreen ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE, &window, &renderer))
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można utworzyć okna i silnika renderującego: %s\n", SDL_GetError());
         return SDL_APP_FAILURE;

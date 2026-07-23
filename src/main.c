@@ -1,0 +1,168 @@
+#define SDL_MAIN_USE_CALLBACKS 1
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3_ttf/SDL_ttf.h>
+
+#include "platform/platform.h"
+#include "state/app_state.h"
+#include "config/config.h"
+#include "display/display.h"
+#include "server/server.h"
+
+static void print_header()
+{
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"\n");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"          ┏┳┓╻┏ ┏━╸╻┏━┓      \n");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"       ┃┏┛┃┃┃┣┻┓┣╸ ┃┣━┫      \n");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"       ┗┛ ╹ ╹╹ ╹┗━╸╹╹ ╹      \n");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"\n");
+}
+
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
+{
+
+    AppState *app = SDL_calloc(1, sizeof(AppState));
+    if (!app)
+        return SDL_APP_FAILURE;
+    *appstate = app;
+
+    print_header();
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie aplikacji " APP_NAME);
+    platform_init();
+    if (!config_load(platform_get_config_path("tablica.ini"), &app->config))
+        return SDL_APP_FAILURE;
+
+#ifndef PLATFORM_ANDROID
+    if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION, 1152 + app->config.display_padding, 768, app->config.display_fullscreen ? (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS) : SDL_WINDOW_RESIZABLE, &app->window, &app->renderer))
+#else
+    if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION, 0, 0, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS, &app->window, &app->renderer))
+#endif
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można utworzyć okna i silnika renderującego: %s\n", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    if (!display_init(&app->display))
+        return SDL_APP_FAILURE;
+
+    if (!server_init(&app->config, &app->server))
+        return SDL_APP_FAILURE;
+    app->server.server_thread = SDL_CreateThread(server_thread, "TablicaZnakowaServer", app);
+
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Aplikacja " APP_NAME " jest gotowa do działania!");
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
+{
+    switch (event->type)
+    {
+        case SDL_EVENT_QUIT:
+            return SDL_APP_SUCCESS;
+
+
+        case SDL_EVENT_KEY_DOWN:
+
+            switch (event->key.key)
+            {
+                case SDLK_ESCAPE:
+                case SDLK_AC_BACK:
+                    return SDL_APP_SUCCESS;
+
+                default:
+                    break;
+            }
+
+            break;
+    }
+
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppIterate(void *appstate)
+{
+    AppState *app = (AppState *)appstate;
+
+    /* Clear screen */
+    SDL_SetRenderDrawColor(app->renderer, app->config.background_color.r, app->config.background_color.g, app->config.background_color.b, 255);
+    SDL_RenderClear(app->renderer);
+
+    /* Get buffer pointer copy */
+    SDL_LockMutex(app->display.mutex);
+    DisplayState *state = app->display.front_buffer;
+    SDL_UnlockMutex(app->display.mutex);
+
+    if (!state || !state -> font)
+    {
+        SDL_RenderPresent(app->renderer);
+        return SDL_APP_CONTINUE;
+    }
+
+    int screen_w, screen_h;
+    SDL_GetRenderOutputSize(app->renderer, &screen_w, &screen_h);
+
+    const float factor = (float)state->brightness / 4.0f;
+    const SDL_Color base = {app->config.foreground_color.r, app->config.foreground_color.g, app->config.foreground_color.b, 255};
+    const SDL_Color color =
+    {
+        .r = (Uint8)((float)base.r * factor),
+        .g = (Uint8)((float)base.g * factor),
+        .b = (Uint8)((float)base.b * factor),
+        .a = 255
+    };
+
+    float line_height = (float)TTF_GetFontHeight(state->font);
+    float available_height = (float)screen_h - (float)app->config.display_padding * 2;
+    float scale = available_height / (line_height * state->maximum_lines);
+
+    float y = (float)app->config.display_padding;
+
+    for (int i = 0; i < DISPLAY_MAX_LINES; i++)
+    {
+
+        const char *text = state->lines[i];
+        if (!text || !text[0])
+            continue;
+
+        SDL_Surface *surface = TTF_RenderText_Blended(state->font, text, 0, color);
+        if (!surface)
+            continue;
+
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(app->renderer, surface);
+        if (!texture)
+        {
+            SDL_DestroySurface(surface);
+            continue;
+        }
+
+        SDL_FRect dst = {
+            .x = (float)app->config.display_padding,
+            .y = y,
+            .w = (float)surface->w * scale,
+            .h = (float)surface->h * scale
+        };
+
+        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_LINEAR);
+
+        SDL_RenderTexture(app->renderer, texture, nullptr, &dst);
+
+        y += line_height * scale;
+
+        SDL_DestroyTexture(texture);
+        SDL_DestroySurface(surface);
+    }
+
+    SDL_RenderPresent(app->renderer);
+    return SDL_APP_CONTINUE;
+}
+
+/* This function runs once at shutdown. */
+void SDL_AppQuit(void *appstate, SDL_AppResult result)
+{
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Zamykam aplikację!");
+    AppState *state = (AppState *)appstate;
+
+    server_destroy(&state->server);
+    display_destroy(&state->display);
+}

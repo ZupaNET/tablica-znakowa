@@ -32,5 +32,6 @@ void display_swap_buffers(DisplayContext *display);
 void display_commit_brightness(const DisplayContext *display);
 void display_draw_line_on_back_buffer(const DisplayContext *display, int line_number, const char *line);
 void display_change_font(const DisplayContext *display, int font_number);
+void display_clear(DisplayContext *display);
 
 #endif //TABLICA_DISPLAY_H

@@ -226,7 +226,9 @@ int server_thread(void *userdata)
                 if (newline > begin && newline[-1] == '\r')
                     newline[-1] = '\0';
 
-                server_parse_client_command(display, client, begin);
+                // Parse only when in display mode
+                if (state->mode == APP_MODE_DISPLAY)
+                    server_parse_client_command(display, client, begin);
 
                 begin = newline + 1;
             }

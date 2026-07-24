@@ -2,6 +2,8 @@
 #include "common/constants.h"
 #include "platform/platform.h"
 
+
+
 static void display_buffer_init(DisplayState *buffer, TTF_Font *default_font)
 {
     buffer->brightness = 4;
@@ -18,26 +20,20 @@ static void display_buffer_init(DisplayState *buffer, TTF_Font *default_font)
 
 static bool display_fonts_init(DisplayContext *display)
 {
-    display->fonts[0] = TTF_OpenFontIO(platform_open_resource("fonts/MiniSet2.ttf"), true, 64.0f);
-    if (!display->fonts[0])
+    static char resource_name[1024];
+    int i;
+    for (i = 0; i < SDL_arraysize(FONT_NAMES); i++)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować czcionki MiniSet2: %s\n", SDL_GetError());
-        return false;
+        SDL_snprintf(resource_name, 1024, "fonts/%s.ttf", FONT_NAMES[i]);
+        display->fonts[i] = TTF_OpenFontIO(platform_open_resource(resource_name), true, 64.0f);
+        if (!display->fonts[i])
+        {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować czcionki %s: %s\n", FONT_NAMES[i], SDL_GetError());
+            return false;
+        }
     }
 
-    display->fonts[1] = TTF_OpenFontIO(platform_open_resource("fonts/MiniForma2.ttf"), true, 64.0f);
-    if (!display->fonts[1])
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować czcionki MiniForma2: %s\n", SDL_GetError());
-        return false;
-    }
-
-    display->fonts[2] = TTF_OpenFontIO(platform_open_resource("fonts/micross.ttf"), true, 64.0f);
-    if (!display->fonts[2])
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować czcionki Sans Serif: %s\n", SDL_GetError());
-        return false;
-    }
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Załadowano %d czcionek", i);
 
     return true;
 }
@@ -136,18 +132,20 @@ void display_change_font(const DisplayContext *display, int font_number)
         return;
 
     display->back_buffer->font = display->fonts[font_number];
-    switch (font_number)
+    display->back_buffer->maximum_lines = FONT_MAX_LINES[font_number];
+}
+
+void display_clear(DisplayContext *display)
+{
+    for (int i = 0; i < DISPLAY_MAX_LINES; i++)
     {
-        case 0:
-            display->back_buffer->maximum_lines = 12;
-            break;
-        case 1:
-            display->back_buffer->maximum_lines = 10;
-            break;
-        case 2:
-            display->back_buffer->maximum_lines = 9;
-            break;
-        default:
-            display->back_buffer->maximum_lines = DISPLAY_MAX_LINES;
+        display_draw_line_on_back_buffer(display, i, "");
+    }
+
+    display_swap_buffers(display);
+
+    for (int i = 0; i < DISPLAY_MAX_LINES; i++)
+    {
+        display_draw_line_on_back_buffer(display, i, "");
     }
 }

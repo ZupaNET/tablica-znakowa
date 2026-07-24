@@ -8,6 +8,8 @@
 #include "config/config.h"
 #include "display/display.h"
 #include "server/server.h"
+#include "input/input.h"
+#include "menu/menu.h"
 
 static void print_header()
 {
@@ -29,7 +31,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     print_header();
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie aplikacji " APP_NAME);
     platform_init();
-    if (!config_load(platform_get_config_path("tablica.ini"), &app->config))
+    keysequence_init(&app->key_sequence, SERVICE_CODE, SDL_arraysize(SERVICE_CODE));
+    if (!config_load(platform_get_config_path(CONFIG_FILENAME), &app->config))
         return SDL_APP_FAILURE;
 
 #ifndef PLATFORM_ANDROID
@@ -41,6 +44,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można utworzyć okna i silnika renderującego: %s\n", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+#ifndef PLATFORM_WINDOWS
+    SDL_Surface* icon = SDL_LoadBMP(platform_get_resource_path("images/icon.bmp"));
+    if (icon)
+    {
+        SDL_SetWindowIcon(app->window, icon);
+        SDL_DestroySurface(icon);
+    }
+    else
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Nie można poprawnie załadować ikony programu: %s\n", SDL_GetError());
+#endif
 
     if (!display_init(&app->display))
         return SDL_APP_FAILURE;
@@ -56,6 +69,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
+    AppState *app = (AppState *)appstate;
+
     switch (event->type)
     {
         case SDL_EVENT_QUIT:
@@ -63,6 +78,22 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
 
         case SDL_EVENT_KEY_DOWN:
+            if (event->key.repeat)
+                return SDL_APP_CONTINUE;
+
+            if (app->mode == APP_MODE_SERVICE)
+            {
+                InputEvent ev = input_translate(event->key.key);
+                service_menu_handle(app, ev);
+                return SDL_APP_CONTINUE;
+            }
+
+            if (keysequence_check(&app->key_sequence, event->key.key))
+            {
+                app->mode = APP_MODE_SERVICE;
+                service_menu_init(&app->menu, &app->display, &app->config);
+                SDL_Log("INFO: Włączono tryb serwisowy!");
+            }
 
             switch (event->key.key)
             {
@@ -74,6 +105,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                     break;
             }
 
+            break;
+
+        default:
             break;
     }
 
@@ -123,7 +157,10 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
         const char *text = state->lines[i];
         if (!text || !text[0])
+        {
+            y += line_height * scale;
             continue;
+        }
 
         SDL_Surface *surface = TTF_RenderText_Blended(state->font, text, 0, color);
         if (!surface)

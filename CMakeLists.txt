@@ -66,31 +66,80 @@ file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS
     src/*.c
 )
 
-add_executable(tablica
-	${APP_SOURCES}
-)
+if(ANDROID)
+
+	add_library(tablica SHARED
+			${APP_SOURCES}
+	)
+
+elseif()
+
+	add_executable(tablica
+			${APP_SOURCES}
+	)
+
+endif()
 
 target_include_directories(tablica
 	PRIVATE src
 )
 
 # --------------------------------------
-# Resources
+# Android project template
+# --------------------------------------
+
+if(ANDROID)
+
+	file(COPY
+			${CMAKE_SOURCE_DIR}/android/
+			DESTINATION
+			${CMAKE_BINARY_DIR}/android
+	)
+
+endif()
+
+# --------------------------------------
+# Resources and Libraries
 # --------------------------------------
 
 set(APP_RESOURCES_DIR
 		${CMAKE_SOURCE_DIR}/resources/common
 )
 
-add_custom_command(
-		TARGET tablica POST_BUILD
+if(ANDROID)
 
-		COMMAND ${CMAKE_COMMAND} -E copy_directory
-		${APP_RESOURCES_DIR}
-		$<TARGET_FILE_DIR:tablica>/resources
+	include(cmake/AndroidRuntime.cmake)
 
-		COMMENT "Copying resources"
-)
+	add_custom_command(TARGET tablica POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E make_directory
+			${CMAKE_BINARY_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}
+
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${CMAKE_BINARY_DIR}/lib"
+			${CMAKE_BINARY_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}
+
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			"${ANDROID_LIBCXX_SHARED}"
+			"${CMAKE_BINARY_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}/"
+
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+			${CMAKE_SOURCE_DIR}/resources/common
+			${CMAKE_BINARY_DIR}/android/app/src/main/assets
+	)
+
+else()
+
+	add_custom_command(
+			TARGET tablica POST_BUILD
+
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+			${APP_RESOURCES_DIR}
+			$<TARGET_FILE_DIR:tablica>/resources
+
+			COMMENT "Copying resources"
+	)
+
+endif()
 
 # --------------------------------------
 # Platform definitions

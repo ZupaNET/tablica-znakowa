@@ -450,10 +450,12 @@ static void service_menu_back(ServiceMenu *menu, AppMode *mode, DisplayContext *
         case MENU_PAGE_NETWORK:
             menu->page = MENU_PAGE_MAIN;
             menu->selected_item = 0;
+            menu->page_item_count = 3;
             break;
         case MENU_PAGE_DISPLAY:
             menu->page = MENU_PAGE_MAIN;
             menu->selected_item = 1;
+            menu->page_item_count = 3;
             break;
     }
 }

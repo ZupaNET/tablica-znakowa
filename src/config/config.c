@@ -9,7 +9,7 @@ static bool parse_hex_color(const char *str, SDL_Color *color)
 {
     unsigned int r, g, b;
 
-    if (sscanf(str, "#%2x%2x%2x", &r, &g, &b) != 3)
+    if (SDL_sscanf(str, "#%2x%2x%2x", &r, &g, &b) != 3)
         return false;
 
     color->r = (Uint8)r;
@@ -24,22 +24,22 @@ static int handler(void *user, const char* section, const char* name, const char
 {
     Config *config = (Config*)user;
 
-    #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+    #define MATCH(s, n) SDL_strcmp(section, s) == 0 && SDL_strcmp(name, n) == 0
     if (MATCH("server", "ip"))
     {
         SDL_strlcpy(config->server_ip, value, sizeof(config->server_ip));
     }
     else if (MATCH("server", "port"))
     {
-        config->server_port = strtol(value, NULL, 10);
+        config->server_port = SDL_strtol(value, NULL, 10);
     }
     else if (MATCH("display", "padding"))
     {
-        config->display_padding = strtol(value, NULL, 10);
+        config->display_padding = SDL_strtol(value, NULL, 10);
     }
     else if (MATCH("display", "fullscreen"))
     {
-        config->display_fullscreen = strtol(value, NULL, 10);
+        config->display_fullscreen = SDL_strtol(value, NULL, 10);
     }
     else if (MATCH("display", "background"))
     {

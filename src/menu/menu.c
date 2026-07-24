@@ -117,7 +117,7 @@ static void service_menu_save_item(ServiceMenu *menu)
                     switch (menu->selected_item)
                     {
                         case 1:
-                            menu->temporary_config.server_port = strtol(menu->input_buffer, nullptr, 10);
+                            menu->temporary_config.server_port = SDL_strtol(menu->input_buffer, nullptr, 10);
                             SDL_Log("INFO: Zmieniono port: %d", menu->temporary_config.server_port);
                             break;
                         default: break;
@@ -127,7 +127,7 @@ static void service_menu_save_item(ServiceMenu *menu)
                     switch (menu->selected_item)
                     {
                         case 0:
-                            menu->temporary_config.display_padding = strtol(menu->input_buffer, nullptr, 10);
+                            menu->temporary_config.display_padding = SDL_strtol(menu->input_buffer, nullptr, 10);
                             SDL_Log("INFO: Zmieniono padding ekranu: %d", menu->temporary_config.display_padding);
                             break;
                         default: break;

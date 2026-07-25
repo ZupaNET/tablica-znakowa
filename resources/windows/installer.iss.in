@@ -58,7 +58,7 @@ Source: "bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "bin\SDL3.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "bin\SDL3_net.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "bin\SDL3_ttf.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "bin\resources\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "bin\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

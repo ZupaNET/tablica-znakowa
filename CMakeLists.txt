@@ -72,7 +72,7 @@ if(ANDROID)
 			${APP_SOURCES}
 	)
 
-elseif()
+else()
 
 	add_executable(tablica
 			${APP_SOURCES}

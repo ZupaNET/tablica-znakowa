@@ -1,15 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
+
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "platform/platform.h"
-#include "state/app_state.h"
 #include "config/config.h"
 #include "display/display.h"
-#include "server/server.h"
 #include "input/input.h"
 #include "menu/menu.h"
+#include "platform/platform.h"
+#include "server/server.h"
+#include "state/app_state.h"
 
 static void print_header()
 {
@@ -45,7 +52,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 #ifndef PLATFORM_WINDOWS
-    SDL_Surface* icon = SDL_LoadBMP(platform_get_resource_path("images/icon.bmp"));
+    SDL_Surface* icon = SDL_LoadBMP(platform_get_resource_path(PROGRAM_ICON_PATH));
     if (icon)
     {
         SDL_SetWindowIcon(app->window, icon);

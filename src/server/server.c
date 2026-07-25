@@ -1,7 +1,14 @@
-#include "server.h"
-#include "display/display.h"
-#include "state/app_state.h"
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
+
 #include "common/constants.h"
+#include "display/display.h"
+#include "server.h"
+#include "state/app_state.h"
 
 bool server_init(const Config *cfg, ServerContext *server)
 {

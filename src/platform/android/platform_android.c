@@ -1,6 +1,13 @@
-#include "../platform.h"
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
 
 #ifdef PLATFORM_ANDROID
+
+#include "../platform.h"
 
 static char resource_path[1024];
 static char config_path[1024];

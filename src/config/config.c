@@ -1,7 +1,15 @@
-#include "config.h"
-#include "common/constants.h"
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
+
 #include <ini.h>
 #include <SDL3/SDL.h>
+
+#include "common/constants.h"
+#include "config.h"
 
 static bool parse_hex_color(const char *str, SDL_Color *color)
 {

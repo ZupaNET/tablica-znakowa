@@ -1,7 +1,13 @@
-#include "menu.h"
-#include "state/app_state.h"
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
 
+#include "menu.h"
 #include "platform/platform.h"
+#include "state/app_state.h"
 
 static const MenuItem network_items[] =
 {

@@ -1,9 +1,15 @@
-#include "../platform.h"
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
 
 #ifdef PLATFORM_WINDOWS
 
-#include <windows.h>
 #include <SDL3/SDL_stdinc.h>
+#include <windows.h>
+#include "../platform.h"
 
 static char resource_path[1024];
 static char config_path[1024];

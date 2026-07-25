@@ -1,9 +1,9 @@
 #ifndef TABLICA_MENU_H
 #define TABLICA_MENU_H
 
-#include "input/input.h"
-#include "display/display.h"
 #include "config/config.h"
+#include "display/display.h"
+#include "input/input.h"
 
 typedef enum
 {

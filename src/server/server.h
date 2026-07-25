@@ -1,11 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
+
 #ifndef TABLICA_SERVER_H
 #define TABLICA_SERVER_H
 
 #include <SDL3_net/SDL_net.h>
 
 #include "common/constants.h"
-#include "config/config.h"
 #include "display/display.h"
+#include "config/config.h"
 
 typedef struct
 {

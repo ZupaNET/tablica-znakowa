@@ -1,7 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
+
 #ifndef TABLICA_CONSTANTS_H
 #define TABLICA_CONSTANTS_H
 
+#include "SDL3/SDL_keycode.h"
+
 #define CONFIG_FILENAME "tablica.ini"
+#define PROGRAM_ICON_PATH "images/icon.bmp"
 
 #define DEFAULT_SERVER_PORT 60023
 #define SERVER_MAXIMUM_CLIENTS 64

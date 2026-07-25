@@ -1,8 +1,13 @@
-#include "display.h"
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Tablica Znakowa
+ *
+ * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ */
+
 #include "common/constants.h"
+#include "display.h"
 #include "platform/platform.h"
-
-
 
 static void display_buffer_init(DisplayState *buffer, TTF_Font *default_font)
 {

@@ -2,8 +2,6 @@
 #include "common/constants.h"
 #include <ini.h>
 #include <SDL3/SDL.h>
-#include <stdio.h>
-#include <stdbool.h>
 
 static bool parse_hex_color(const char *str, SDL_Color *color)
 {
@@ -31,15 +29,15 @@ static int handler(void *user, const char* section, const char* name, const char
     }
     else if (MATCH("server", "port"))
     {
-        config->server_port = SDL_strtol(value, NULL, 10);
+        config->server_port = SDL_strtol(value, nullptr, 10);
     }
     else if (MATCH("display", "padding"))
     {
-        config->display_padding = SDL_strtol(value, NULL, 10);
+        config->display_padding = SDL_strtol(value, nullptr, 10);
     }
     else if (MATCH("display", "fullscreen"))
     {
-        config->display_fullscreen = SDL_strtol(value, NULL, 10);
+        config->display_fullscreen = SDL_strtol(value, nullptr, 10);
     }
     else if (MATCH("display", "background"))
     {

@@ -34,8 +34,8 @@ typedef struct
     int position;
 } KeySequence;
 
-void keysequence_init(KeySequence *seq, const SDL_Keycode *keys, int length);
-bool keysequence_check(KeySequence *seq, SDL_Keycode key);
+void input_key_sequence_init(KeySequence *seq, const SDL_Keycode *keys, int length);
+bool input_key_sequence_check(KeySequence *seq, SDL_Keycode key);
 
 InputEvent input_translate(SDL_Keycode key);
 

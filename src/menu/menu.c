@@ -1,6 +1,5 @@
 #include "menu.h"
 #include "state/app_state.h"
-#include <stdarg.h>
 
 #include "platform/platform.h"
 
@@ -18,7 +17,7 @@ static const MenuItem display_items[] =
     { "KOLOR CZCIONKI", MENU_FIELD_FOREGROUND, EDIT_COLOR },
 };
 
-void service_menu_init(ServiceMenu *menu, DisplayContext *display, Config *config)
+void service_menu_init(ServiceMenu *menu, DisplayContext *display, const Config *config)
 {
     menu->page = MENU_PAGE_MAIN;
     menu->page_item_count = 3;
@@ -31,7 +30,7 @@ void service_menu_init(ServiceMenu *menu, DisplayContext *display, Config *confi
     service_menu_render(menu, display);
 }
 
-static void service_menu_draw_option(DisplayContext *display, bool selected, int line, const char *fmt, ...)
+static void service_menu_draw_option(const DisplayContext *display, bool selected, int line, const char *fmt, ...)
 {
     va_list args;
     char buffer[128];
@@ -105,8 +104,8 @@ static void service_menu_save_item(ServiceMenu *menu)
                         default: break;
                     }
                     break;
-                case MENU_PAGE_DISPLAY:
-                    break;
+                //case MENU_PAGE_DISPLAY:
+                //    break;
                 default: break;
             }
             break;
@@ -188,7 +187,7 @@ static void service_menu_edit_ip(ServiceMenu *menu, InputEvent ev)
     {
         if (menu->input_length < SDL_arraysize(menu->input_buffer)-1)
         {
-            menu->input_buffer[menu->input_length++] = '0' + ev.digit;
+            menu->input_buffer[menu->input_length++] = (char)('0' + ev.digit);
             menu->input_buffer[menu->input_length] = '\0';
         }
 
@@ -238,7 +237,7 @@ static void service_menu_edit_number(ServiceMenu *menu, InputEvent ev)
     {
         if (menu->input_length < SDL_arraysize(menu->input_buffer)-1)
         {
-            menu->input_buffer[menu->input_length++] = '0' + ev.digit;
+            menu->input_buffer[menu->input_length++] = (char)('0' + ev.digit);
             menu->input_buffer[menu->input_length] = '\0';
         }
 
@@ -317,7 +316,7 @@ static void service_menu_edit_color(ServiceMenu *menu, InputEvent ev)
     {
         if (menu->input_length < SDL_arraysize(menu->input_buffer)-1)
         {
-            menu->input_buffer[menu->input_length++] = '0' + ev.digit;
+            menu->input_buffer[menu->input_length++] = (char)('0' + ev.digit);
             menu->input_buffer[menu->input_length] = '\0';
         }
 
@@ -369,8 +368,22 @@ static void service_menu_edit_color(ServiceMenu *menu, InputEvent ev)
         service_menu_save_item(menu);
         menu->edit_mode = EDIT_NONE;
     }
+}
 
-    return;
+static void service_menu_edit_bool(ServiceMenu *menu, InputEvent ev)
+{
+    if (ev.action == INPUT_BACK)
+    {
+        menu->edit_mode = EDIT_NONE;
+        return;
+    }
+
+    if (ev.action == INPUT_OK)
+    {
+        service_menu_save_item(menu);
+        menu->edit_mode = EDIT_NONE;
+        return;
+    }
 }
 
 static void service_menu_edit_handle(ServiceMenu *menu, InputEvent ev)
@@ -387,8 +400,7 @@ static void service_menu_edit_handle(ServiceMenu *menu, InputEvent ev)
             service_menu_edit_color(menu, ev);
             break;
         case EDIT_BOOL:
-            service_menu_save_item(menu);
-            menu->edit_mode = EDIT_NONE;
+            service_menu_edit_bool(menu, ev);
             break;
         default: break;
     }
@@ -493,7 +505,7 @@ void service_menu_handle(void *state, InputEvent ev)
     service_menu_render(menu, &app->display);
 }
 
-static void service_menu_draw_item(ServiceMenu *menu, DisplayContext *display, const MenuItem *item, bool selected, int line)
+static void service_menu_draw_item(ServiceMenu *menu, const DisplayContext *display, const MenuItem *item, bool selected, int line)
 {
     switch (item->field)
     {
@@ -571,7 +583,7 @@ static void service_menu_draw_item(ServiceMenu *menu, DisplayContext *display, c
     }
 }
 
-static void service_menu_overlay_render(DisplayContext *display)
+static void service_menu_overlay_render(const DisplayContext *display)
 {
     display_draw_line_on_back_buffer(display, 0, "        MENU SERWISOWE");
     display_draw_line_on_back_buffer(display, 1, "-------------------------------");
@@ -579,14 +591,14 @@ static void service_menu_overlay_render(DisplayContext *display)
     display_draw_line_on_back_buffer(display, 10, "-------------------------------");
 }
 
-static void service_menu_main_page_render(ServiceMenu *menu, DisplayContext *display)
+static void service_menu_main_page_render(const ServiceMenu *menu, const DisplayContext *display)
 {
     service_menu_draw_option(display, menu->selected_item == 0, 2, "SIEĆ");
     service_menu_draw_option(display, menu->selected_item == 1, 4, "EKRAN");
     service_menu_draw_option(display, menu->selected_item == 2, 9, "ZAPISZ / WYJDŹ");
 }
 
-static void service_menu_network_page_render(ServiceMenu *menu, DisplayContext *display)
+static void service_menu_network_page_render(ServiceMenu *menu, const DisplayContext *display)
 {
     for (int i = 0; i < SDL_arraysize(network_items); i++)
     {
@@ -594,7 +606,7 @@ static void service_menu_network_page_render(ServiceMenu *menu, DisplayContext *
     }
 }
 
-static void service_menu_display_page_render(ServiceMenu *menu, DisplayContext *display)
+static void service_menu_display_page_render(ServiceMenu *menu, const DisplayContext *display)
 {
     for (int i = 0; i < SDL_arraysize(display_items); i++)
     {

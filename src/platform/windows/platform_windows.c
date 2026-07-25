@@ -47,7 +47,7 @@ const char *platform_get_resource_path(const char *relative_path)
 {
     const char *base = SDL_GetBasePath();
     if (!base)
-        return NULL;
+        return nullptr;
 
     SDL_snprintf(
         resource_path,

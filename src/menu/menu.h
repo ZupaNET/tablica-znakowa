@@ -53,7 +53,7 @@ typedef struct
     int input_length;
 } ServiceMenu;
 
-void service_menu_init(ServiceMenu *menu, DisplayContext *display, Config *config);
+void service_menu_init(ServiceMenu *menu, DisplayContext *display, const Config *config);
 void service_menu_handle(void *state, InputEvent ev);
 void service_menu_render(ServiceMenu *menu, DisplayContext *display);
 

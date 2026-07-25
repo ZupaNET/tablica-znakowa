@@ -69,7 +69,7 @@ static void display_buffer_destroy(const DisplayState *buffer)
     }
 }
 
-static void display_fonts_destroy(DisplayContext *display)
+static void display_fonts_destroy(const DisplayContext *display)
 {
     for (int i = 0; i < DISPLAY_MAX_FONTS; i ++)
     {
@@ -78,7 +78,7 @@ static void display_fonts_destroy(DisplayContext *display)
     }
 }
 
-void display_destroy(DisplayContext *display)
+void display_destroy(const DisplayContext *display)
 {
     display_buffer_destroy(&display->buffer1);
     display_buffer_destroy(&display->buffer2);

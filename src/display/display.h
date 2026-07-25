@@ -27,7 +27,7 @@ typedef struct
 } DisplayContext;
 
 bool display_init(DisplayContext *display);
-void display_destroy(DisplayContext *display);
+void display_destroy(const DisplayContext *display);
 void display_swap_buffers(DisplayContext *display);
 void display_commit_brightness(const DisplayContext *display);
 void display_draw_line_on_back_buffer(const DisplayContext *display, int line_number, const char *line);

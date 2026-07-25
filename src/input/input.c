@@ -1,13 +1,13 @@
 #include "input.h"
 
-void keysequence_init(KeySequence *seq, const SDL_Keycode *keys, int length)
+void input_key_sequence_init(KeySequence *seq, const SDL_Keycode *keys, int length)
 {
     seq->sequence = keys;
     seq->length = length;
     seq->position = 0;
 }
 
-bool keysequence_check(KeySequence *seq, SDL_Keycode key)
+bool input_key_sequence_check(KeySequence *seq, SDL_Keycode key)
 {
     if (SDL_GetTicks() - seq->last_key_time > 5000)
     {

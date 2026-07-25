@@ -31,12 +31,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     print_header();
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INFO: Ładowanie aplikacji " APP_NAME);
     platform_init();
-    keysequence_init(&app->key_sequence, SERVICE_CODE, SDL_arraysize(SERVICE_CODE));
+    input_key_sequence_init(&app->key_sequence, SERVICE_CODE, SDL_arraysize(SERVICE_CODE));
     if (!config_load(platform_get_config_path(CONFIG_FILENAME), &app->config))
         return SDL_APP_FAILURE;
 
 #ifndef PLATFORM_ANDROID
-    if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION, 1152 + app->config.display_padding, 768, app->config.display_fullscreen ? (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS) : SDL_WINDOW_RESIZABLE, &app->window, &app->renderer))
+    if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION, 1152 + app->config.display_padding, 768 - app->config.display_padding, app->config.display_fullscreen ? (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS) : SDL_WINDOW_RESIZABLE, &app->window, &app->renderer))
 #else
     if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION, 0, 0, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS, &app->window, &app->renderer))
 #endif
@@ -88,7 +88,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                 return SDL_APP_CONTINUE;
             }
 
-            if (keysequence_check(&app->key_sequence, event->key.key))
+            if (input_key_sequence_check(&app->key_sequence, event->key.key))
             {
                 app->mode = APP_MODE_SERVICE;
                 service_menu_init(&app->menu, &app->display, &app->config);

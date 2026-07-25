@@ -65,7 +65,7 @@ void server_parse_client_command(DisplayContext *display, Client *client, const 
         if (!SDL_isdigit(line[1]) || !SDL_isdigit(line[2]))
             return;
 
-        const unsigned int line_number = (line[1] - '0') * 10 + (line[2] - '0');
+        const int line_number = (line[1] - '0') * 10 + (line[2] - '0');
         const char *line_begin = line + 3;
 
         display_draw_line_on_back_buffer(display, line_number, line_begin);
@@ -76,7 +76,7 @@ void server_parse_client_command(DisplayContext *display, Client *client, const 
         if (SDL_strlen(line) < 3)
             return;
 
-        const unsigned int font_number = (line[1] - '0') * 10 + (line[2] - '0');
+        const int font_number = (line[1] - '0') * 10 + (line[2] - '0');
         if (font_number > DISPLAY_MAX_FONTS)
             return;
 

@@ -274,4 +274,17 @@ if(WIN32)
 			COMMENT "Building the installer"
 	)
 
+	add_custom_target(zip-package
+			COMMAND
+			${CMAKE_COMMAND} -E tar
+			"cfv"
+			"${CMAKE_BINARY_DIR}/Output/tablica-znakowa-${APP_VERSION_STRING}-package.zip"
+			--format=zip
+			.
+
+			WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+
+			COMMENT "Creating ZIP package"
+	)
+
 endif()

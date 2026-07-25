@@ -19,6 +19,12 @@ if(WIN32)
         @ONLY
     )
 
+    configure_file(
+        ${CMAKE_SOURCE_DIR}/resources/windows/installer.iss.in
+        ${CMAKE_BINARY_DIR}/installer.iss
+        @ONLY
+    )
+
 elseif(ANDROID)
 
     configure_file(

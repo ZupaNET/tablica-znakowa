@@ -256,3 +256,22 @@ if(ANDROID)
 	)
 
 endif()
+
+# --------------------------------------
+# Target for Windows install generation
+# --------------------------------------
+
+if(WIN32)
+
+	include(cmake/FindInnoSetup.cmake)
+
+	add_custom_target(installer
+			COMMAND ${INNO_SETUP_COMPILER} "${CMAKE_BINARY_DIR}/installer.iss"
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+			DEPENDS tablica
+			USES_TERMINAL
+
+			COMMENT "Building the installer"
+	)
+
+endif()

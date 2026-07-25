@@ -17,6 +17,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
 )
 
 # --------------------------------------
+# Application information
+# --------------------------------------
+set(APP_NAME "Tablica Znakowa")
+set(APP_COMPANY "ZupaNET Development")
+
+# --------------------------------------
 # Version
 # --------------------------------------
 
@@ -85,20 +91,6 @@ target_include_directories(tablica
 )
 
 # --------------------------------------
-# Android project template
-# --------------------------------------
-
-if(ANDROID)
-
-	file(COPY
-			${CMAKE_SOURCE_DIR}/android/
-			DESTINATION
-			${CMAKE_BINARY_DIR}/android
-	)
-
-endif()
-
-# --------------------------------------
 # Resources and Libraries
 # --------------------------------------
 
@@ -106,28 +98,7 @@ set(APP_RESOURCES_DIR
 		${CMAKE_SOURCE_DIR}/resources/common
 )
 
-if(ANDROID)
-
-	include(cmake/AndroidRuntime.cmake)
-
-	add_custom_command(TARGET tablica POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E make_directory
-			${CMAKE_BINARY_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}
-
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${CMAKE_BINARY_DIR}/lib"
-			${CMAKE_BINARY_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}
-
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different
-			"${ANDROID_LIBCXX_SHARED}"
-			"${CMAKE_BINARY_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}/"
-
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			${CMAKE_SOURCE_DIR}/resources/common
-			${CMAKE_BINARY_DIR}/android/app/src/main/assets
-	)
-
-else()
+if(NOT ANDROID)
 
 	add_custom_command(
 			TARGET tablica POST_BUILD
@@ -167,12 +138,12 @@ endif()
 
 
 # --------------------------------------
-# Application info
+# Application info definitions
 # --------------------------------------
 
 target_compile_definitions(tablica PRIVATE
-		APP_NAME="Tablica Znakowa"
-		APP_COMPANY="ZupaNET Development"
+		APP_NAME="${APP_NAME}"
+		APP_COMPANY="${APP_COMPANY}"
 		APP_VERSION="${PROJECT_VERSION}"
 )
 
@@ -223,5 +194,65 @@ if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -static-libgcc
         -static-libstdc++
     )
+
+endif()
+
+# --------------------------------------
+# Target for APK generation
+# --------------------------------------
+
+if(ANDROID)
+
+	include(cmake/AndroidRuntime.cmake)
+
+	set(JNI_DIR "${CMAKE_BINARY_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}")
+
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(GRADLE_TASK assembleDebug)
+	else()
+		set(GRADLE_TASK assembleRelease)
+	endif()
+
+	add_custom_target(android_prepare
+			DEPENDS tablica
+
+			COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_BINARY_DIR}/android"
+
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${CMAKE_SOURCE_DIR}/android"
+			"${CMAKE_BINARY_DIR}/android"
+
+			COMMAND ${CMAKE_COMMAND} -E make_directory
+			"${CMAKE_BINARY_DIR}/android/app/src/main/assets"
+
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${APP_RESOURCES_DIR}"
+			"${CMAKE_BINARY_DIR}/android/app/src/main/assets"
+
+			COMMAND ${CMAKE_COMMAND} -E make_directory "${JNI_DIR}"
+
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${CMAKE_BINARY_DIR}/lib"
+			"${JNI_DIR}"
+
+			COMMAND ${CMAKE_COMMAND} -E copy
+			"${ANDROID_LIBCXX_SHARED}"
+			"${JNI_DIR}/"
+
+			COMMAND ${CMAKE_COMMAND} -E copy
+			"${CMAKE_BINARY_DIR}/build.gradle"
+			"${CMAKE_BINARY_DIR}/android/app/build.gradle"
+
+			COMMENT "Copying libraries and resources into APK"
+	)
+
+	add_custom_target(apk
+			COMMAND gradlew.bat ${GRADLE_TASK} --console=plain
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/android
+			DEPENDS tablica android_prepare
+			USES_TERMINAL
+
+			COMMENT "Building the APK"
+	)
 
 endif()

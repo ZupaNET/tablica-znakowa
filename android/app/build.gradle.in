@@ -1,0 +1,80 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace "pl.zupanet.tablica"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "pl.zupanet.tablica"
+        minSdk 21
+        targetSdk 35
+        versionCode @APP_VERSION_CODE@
+        versionName "@APP_VERSION_STRING@"
+
+    }
+
+    signingConfigs {
+        release {
+            def store = System.getenv("ANDROID_KEYSTORE")
+            if(store != null) {
+                storeFile file(store)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            jniDebuggable true
+
+            minifyEnabled false
+            shrinkResources false
+        }
+
+        release {
+            debuggable false
+
+            signingConfig signingConfigs.release
+
+            shrinkResources true
+            minifyEnabled true
+
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            ndk {
+                debugSymbolLevel 'NONE'
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+	sourceSets {
+        main {
+			assets.srcDirs = ["src/main/assets"]
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+
+    applicationVariants.configureEach { variant ->
+        variant.outputs.configureEach {
+            def abi = "@ANDROID_ABI@"
+
+            outputFileName =
+                "TablicaZnakowa-" +
+                variant.versionName +
+                "-" +
+                abi +
+                "-" +
+                variant.buildType.name +
+                ".apk"
+        }
+    }
+}

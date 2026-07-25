@@ -41,66 +41,6 @@
       }
     },
 
-
-    {
-      "name": "androidtv-debug",
-      "displayName": "Android TV Debug",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/AndroidTV-Debug",
-      "toolchainFile": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ANDROID_ABI": "arm64-v8a",
-        "ANDROID_PLATFORM": "android-26",
-        "ANDROID_STL": "c++_shared",
-        "APP_ANDROID_TV": "ON"
-      }
-    },
-    {
-      "name": "androidtv-release",
-      "displayName": "Android TV Release",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/AndroidTV-Release",
-      "toolchainFile": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "ANDROID_ABI": "arm64-v8a",
-        "ANDROID_PLATFORM": "android-26",
-        "ANDROID_STL": "c++_shared",
-        "APP_ANDROID_TV": "ON"
-      }
-    },
-
-    {
-      "name": "androidtv-x86-64-debug",
-      "displayName": "Android TV (x86_64) Debug",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/AndroidTV-x86-64-Debug",
-      "toolchainFile": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ANDROID_ABI": "x86_64",
-        "ANDROID_PLATFORM": "android-26",
-        "ANDROID_STL": "c++_shared",
-        "APP_ANDROID_TV": "ON"
-      }
-    },
-    {
-      "name": "androidtv-x86-64-release",
-      "displayName": "Android TV (x86_64) Release",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/AndroidTV-x86-64-Release",
-      "toolchainFile": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "ANDROID_ABI": "x86_64",
-        "ANDROID_PLATFORM": "android-26",
-        "ANDROID_STL": "c++_shared",
-        "APP_ANDROID_TV": "ON"
-      }
-    },
-
-
     {
       "name": "android-debug",
       "displayName": "Android Debug",
@@ -111,8 +51,7 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "ANDROID_ABI": "arm64-v8a",
         "ANDROID_PLATFORM": "android-26",
-        "ANDROID_STL": "c++_shared",
-        "APP_ANDROID_TV": "OFF"
+        "ANDROID_STL": "c++_shared"
       }
     },
     {
@@ -125,8 +64,7 @@
         "CMAKE_BUILD_TYPE": "Release",
         "ANDROID_ABI": "arm64-v8a",
         "ANDROID_PLATFORM": "android-26",
-        "ANDROID_STL": "c++_shared",
-        "APP_ANDROID_TV": "OFF"
+        "ANDROID_STL": "c++_shared"
       }
     },
 
@@ -140,8 +78,7 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "ANDROID_ABI": "x86_64",
         "ANDROID_PLATFORM": "android-26",
-        "ANDROID_STL": "c++_shared",
-        "APP_ANDROID_TV": "ON"
+        "ANDROID_STL": "c++_shared"
       }
     },
     {
@@ -154,8 +91,7 @@
         "CMAKE_BUILD_TYPE": "Release",
         "ANDROID_ABI": "x86_64",
         "ANDROID_PLATFORM": "android-26",
-        "ANDROID_STL": "c++_shared",
-        "APP_ANDROID_TV": "ON"
+        "ANDROID_STL": "c++_shared"
       }
     }
   ],
@@ -180,26 +116,6 @@
       "name": "build-linux-release",
       "configurePreset": "linux-release"
     },
-
-
-    {
-      "name": "build-androidtv-debug",
-      "configurePreset": "androidtv-debug"
-    },
-    {
-      "name": "build-androidtv-release",
-      "configurePreset": "androidtv-release"
-    },
-
-    {
-      "name": "build-androidtv-x86-64-debug",
-      "configurePreset": "androidtv-x86-64-debug"
-    },
-    {
-      "name": "build-androidtv-x86-64-release",
-      "configurePreset": "androidtv-x86-64-release"
-    },
-
 
     {
       "name": "build-android-debug",

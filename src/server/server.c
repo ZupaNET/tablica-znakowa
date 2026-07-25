@@ -208,7 +208,7 @@ int server_thread(void *userdata)
                 continue;
             }
 
-            memcpy(client->buffer + client->used, temp, received);
+            SDL_memcpy(client->buffer + client->used, temp, received);
             client->used += received;
 
             char *begin = client->buffer;
@@ -235,7 +235,7 @@ int server_thread(void *userdata)
 
             size_t remaining = client->used - (begin - client->buffer);
 
-            memmove(client->buffer, begin, remaining);
+            SDL_memmove(client->buffer, begin, remaining);
 
             client->used = remaining;
         }

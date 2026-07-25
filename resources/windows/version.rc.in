@@ -18,7 +18,7 @@ BEGIN
 	BLOCK "StringFileInfo"
 	BEGIN
 	
-		BLOCK "041504B0"
+		BLOCK "041504E2"
 		BEGIN
 			VALUE "CompanyName", "ZupaNET Development"
 			VALUE "FileDescription", "Tablica Znakowa"
@@ -26,14 +26,14 @@ BEGIN
 			VALUE "ProductName", "Tablica Znakowa"
 			VALUE "ProductVersion", "@APP_VERSION_STRING@"
 			VALUE "OriginalFilename", "tablica.exe"
-			VALUE "LegalCopyright", "Copyright ZupaNET Development c 2026"
+			VALUE "LegalCopyright", "Copyright (C) 2026 ZupaNET Development"
 		END
 		
 	END
 	
 	BLOCK "VarFileInfo"
 	BEGIN
-		VALUE "Translation", 0x0415, 1200
+		VALUE "Translation", 0x0415, 0x04E2
 	END
 
 END

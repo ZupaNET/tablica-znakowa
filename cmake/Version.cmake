@@ -6,8 +6,12 @@ set(APP_VERSION_STRING
     "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
 )
 
-configure_file(
-    ${CMAKE_SOURCE_DIR}/resources/windows/version.rc.in
-    ${CMAKE_BINARY_DIR}/version.rc
-    @ONLY
-)
+if(WIN32)
+
+    configure_file(
+        ${CMAKE_SOURCE_DIR}/resources/windows/version.rc.in
+        ${CMAKE_BINARY_DIR}/version.rc
+        @ONLY
+    )
+
+endif()

@@ -214,10 +214,10 @@ if(WIN32)
 endif()
 
 # --------------------------------------
-# MinGW static runtime
+# GNU GCC static runtime for Windows
 # --------------------------------------
 
-if(WIN32 AND MINGW)
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
     target_link_options(tablica PRIVATE
         -static-libgcc

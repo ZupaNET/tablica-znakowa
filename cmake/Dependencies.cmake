@@ -31,7 +31,6 @@ endif()
 if(NOT USE_SYSTEM_SDL)
 
     # SDL3
-    set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
     set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
     set(SDL_TESTS OFF CACHE BOOL "" FORCE)
     set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -45,7 +44,6 @@ if(NOT USE_SYSTEM_SDL)
     FetchContent_MakeAvailable(SDL3)
 
     # SDL3_ttf
-    set(SDLTTF_INSTALL OFF CACHE BOOL "" FORCE)
     set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
     set(FT_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
 
@@ -59,8 +57,6 @@ if(NOT USE_SYSTEM_SDL)
 
 
     # SDL3_net
-    set(SDLNET_INSTALL OFF CACHE BOOL "" FORCE)
-
     FetchContent_Declare(
             SDL3_net
             GIT_REPOSITORY https://github.com/libsdl-org/SDL_net.git
@@ -69,4 +65,32 @@ if(NOT USE_SYSTEM_SDL)
 
     FetchContent_MakeAvailable(SDL3_net)
 
+endif()
+
+# --------------------------------------
+# Install runtime dependencies
+# --------------------------------------
+
+if(TARGET SDL3-shared)
+    install(
+        TARGETS SDL3-shared
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
+
+if(TARGET SDL3_ttf-shared)
+    install(
+        TARGETS SDL3_ttf-shared
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
+
+if(TARGET SDL3_net-shared)
+    install(
+        TARGETS SDL3_net-shared
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
 endif()

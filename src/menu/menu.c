@@ -25,8 +25,9 @@ static const MenuItem display_items[] =
 
 void service_menu_init(ServiceMenu *menu, DisplayContext *display, const Config *config)
 {
+    menu->hideOverlay = false;
     menu->page = MENU_PAGE_MAIN;
-    menu->page_item_count = 3;
+    menu->page_item_count = 4;
     menu->selected_item = 0;
     menu->edit_mode = EDIT_NONE;
     menu->temporary_config = *config;
@@ -429,9 +430,10 @@ static void service_menu_enter(ServiceMenu *menu, AppMode *mode, DisplayContext 
         case MENU_PAGE_MAIN:
             switch (menu->selected_item)
             {
-                case 0: menu->page = MENU_PAGE_NETWORK; menu->page_item_count = SDL_arraysize(network_items); menu->selected_item = 0; menu->edit_mode = EDIT_NONE; break;
-                case 1: menu->page = MENU_PAGE_DISPLAY; menu->page_item_count = SDL_arraysize(display_items); menu->selected_item = 0; menu->edit_mode = EDIT_NONE; break;
-                case 2:
+                case 0: menu->page = MENU_PAGE_NETWORK; menu->page_item_count = SDL_arraysize(network_items); menu->selected_item = 0; menu->edit_mode = EDIT_NONE; menu->hideOverlay = false; break;
+                case 1: menu->page = MENU_PAGE_DISPLAY; menu->page_item_count = SDL_arraysize(display_items); menu->selected_item = 0; menu->edit_mode = EDIT_NONE; menu->hideOverlay = false; break;
+                case 2: menu->page = MENU_PAGE_LICENSE; menu->page_item_count = 0; menu->selected_item = 0; menu->edit_mode = EDIT_NONE; menu->hideOverlay = true; break;
+                case 3:
                     config_save(platform_get_config_path(CONFIG_FILENAME), &menu->temporary_config);
                     display_clear(display);
                     *exit = 1;
@@ -468,12 +470,20 @@ static void service_menu_back(ServiceMenu *menu, AppMode *mode, DisplayContext *
         case MENU_PAGE_NETWORK:
             menu->page = MENU_PAGE_MAIN;
             menu->selected_item = 0;
-            menu->page_item_count = 3;
+            menu->page_item_count = 4;
+            menu->hideOverlay = false;
             break;
         case MENU_PAGE_DISPLAY:
             menu->page = MENU_PAGE_MAIN;
             menu->selected_item = 1;
-            menu->page_item_count = 3;
+            menu->page_item_count = 4;
+            menu->hideOverlay = false;
+            break;
+        case MENU_PAGE_LICENSE:
+            menu->page = MENU_PAGE_MAIN;
+            menu->selected_item = 2;
+            menu->page_item_count = 4;
+            menu->hideOverlay = false;
             break;
     }
 }
@@ -589,8 +599,10 @@ static void service_menu_draw_item(ServiceMenu *menu, const DisplayContext *disp
     }
 }
 
-static void service_menu_overlay_render(const DisplayContext *display)
+static void service_menu_overlay_render(const DisplayContext *display, bool hide)
 {
+    if (hide) return;
+
     display_draw_line_on_back_buffer(display, 0, "        MENU SERWISOWE");
     display_draw_line_on_back_buffer(display, 1, "-------------------------------");
 
@@ -601,7 +613,9 @@ static void service_menu_main_page_render(const ServiceMenu *menu, const Display
 {
     service_menu_draw_option(display, menu->selected_item == 0, 2, "SIEĆ");
     service_menu_draw_option(display, menu->selected_item == 1, 4, "EKRAN");
-    service_menu_draw_option(display, menu->selected_item == 2, 9, "ZAPISZ / WYJDŹ");
+
+    service_menu_draw_option(display, menu->selected_item == 2, 7, "LICENCJE");
+    service_menu_draw_option(display, menu->selected_item == 3, 9, "ZAPISZ / WYJDŹ");
 }
 
 static void service_menu_network_page_render(ServiceMenu *menu, const DisplayContext *display)
@@ -620,11 +634,29 @@ static void service_menu_display_page_render(ServiceMenu *menu, const DisplayCon
     }
 }
 
+static void service_menu_license_page_render(ServiceMenu *menu, const DisplayContext *display)
+{
+    display_draw_line_on_back_buffer(display, 0, APP_NAME);
+    display_draw_line_on_back_buffer(display, 1, "Copyright (c) 2026 " APP_COMPANY);
+    display_draw_line_on_back_buffer(display, 2, "Licensed under GNU GPL-2.0-only");
+
+    display_draw_line_on_back_buffer(display, 3, "Uses SDL3, SDL3_ttf, SDL3_net (zlib),");
+    display_draw_line_on_back_buffer(display, 4, "inih (BSD-3-Clause), stb_image (MIT)");
+
+    display_draw_line_on_back_buffer(display, 5, "Fonts:");
+    display_draw_line_on_back_buffer(display, 6, "CozetteVector (Samhain & contrib, MIT)");
+    display_draw_line_on_back_buffer(display, 7, "MiniForma2, MiniSet2 (Bartek Nowak)");
+    display_draw_line_on_back_buffer(display, 8, "Monocraft (Idress Hassan, SIL OFL 1.1)");
+    display_draw_line_on_back_buffer(display, 9, "FreeSans (GNU Project, GNU GPL v2)");
+    display_draw_line_on_back_buffer(display, 10, "Third-party licenses included.");
+    display_draw_line_on_back_buffer(display, 11, "Source code available with this software.");
+}
+
 void service_menu_render(ServiceMenu *menu, DisplayContext *display)
 {
     display_clear(display);
     display_change_font(display, 4);
-    service_menu_overlay_render(display);
+    service_menu_overlay_render(display, menu->hideOverlay);
 
     switch (menu->page)
     {
@@ -638,6 +670,10 @@ void service_menu_render(ServiceMenu *menu, DisplayContext *display)
 
         case MENU_PAGE_DISPLAY:
             service_menu_display_page_render(menu, display);
+            break;
+
+        case MENU_PAGE_LICENSE:
+            service_menu_license_page_render(menu, display);
             break;
     }
 

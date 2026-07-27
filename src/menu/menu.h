@@ -9,7 +9,8 @@ typedef enum
 {
     MENU_PAGE_MAIN,
     MENU_PAGE_NETWORK,
-    MENU_PAGE_DISPLAY
+    MENU_PAGE_DISPLAY,
+    MENU_PAGE_LICENSE
 } MenuPage;
 
 typedef enum
@@ -41,6 +42,8 @@ typedef struct
 
 typedef struct
 {
+    bool hideOverlay;
+
     MenuPage page;
     int page_item_count;
 

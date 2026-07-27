@@ -453,6 +453,8 @@ static void service_menu_enter(ServiceMenu *menu, AppMode *mode, DisplayContext 
             SDL_zero(menu->input_buffer); menu->input_length = 0;
             menu->edit_mode = display_items[menu->selected_item].edit_mode;
             break;
+        case MENU_PAGE_LICENSE:
+            break;
     }
 }
 

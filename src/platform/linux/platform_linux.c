@@ -28,12 +28,22 @@ SDL_IOStream *platform_open_resource(const char *relative_path)
     );
 }
 
+static bool file_exists(const char *path)
+{
+    SDL_IOStream *io = SDL_IOFromFile(path, "rb");
+    if (!io) return false;
+
+    SDL_CloseIO(io);
+    return true;
+}
+
 const char *platform_get_resource_path(const char *relative_path)
 {
     const char *base = SDL_GetBasePath();
     if (!base)
         return nullptr;
 
+    // Besides app binary in ./resources/
     SDL_snprintf(
         resource_path,
         sizeof(resource_path),
@@ -42,7 +52,34 @@ const char *platform_get_resource_path(const char *relative_path)
         relative_path
     );
 
-    return resource_path;
+    if (file_exists(resource_path))
+        return resource_path;
+
+    // In /usr/local/share/tablica/
+    SDL_snprintf(
+        resource_path,
+        sizeof(resource_path),
+        "%s%s",
+        "/usr/local/share/tablica/",
+        relative_path
+    );
+
+    if (file_exists(resource_path))
+        return resource_path;
+
+    // In /usr/share/tablica/
+    SDL_snprintf(
+        resource_path,
+        sizeof(resource_path),
+        "%s%s",
+        "/usr/share/tablica/",
+        relative_path
+    );
+
+    if (file_exists(resource_path))
+        return resource_path;
+
+    return nullptr;
 }
 
 const char *platform_get_config_path(const char *filename)

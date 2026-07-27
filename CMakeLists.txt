@@ -30,36 +30,7 @@ set(APP_COMPANY "ZupaNET Development")
 # Dependencies
 # --------------------------------------
 
-include(FetchContent)
-
-# SDL3
-FetchContent_Declare(
-	SDL3
-	GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-	GIT_TAG main
-)
-
-FetchContent_MakeAvailable(SDL3)
-
-# SDL3_ttf
-FetchContent_Declare(
-    SDL3_ttf
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
-    GIT_TAG main
-)
-
-set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(SDL3_ttf)
-
-
-# SDL3_net
-FetchContent_Declare(
-    SDL3_net
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_net.git
-    GIT_TAG main
-)
-
-FetchContent_MakeAvailable(SDL3_net)
+include(cmake/Dependencies.cmake)
 
 # --------------------------------------
 # Application sources and includes
@@ -214,3 +185,51 @@ if(WIN32)
 	)
 
 endif()
+
+# --------------------------------------
+# Installation on Linux
+# --------------------------------------
+
+include(GNUInstallDirs)
+
+install(
+	TARGETS tablica
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(
+	DIRECTORY ${CMAKE_SOURCE_DIR}/resources/common/
+	DESTINATION ${CMAKE_INSTALL_DATADIR}/tablica
+)
+
+# --------------------------------------
+# CPack configuration
+# --------------------------------------
+
+set(CPACK_PACKAGE_NAME "${APP_NAME}")
+set(CPACK_PACKAGE_VENDOR "${APP_COMPANY}")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tablica Znakowa")
+set(CPACK_PACKAGE_CONTACT "devel@zupanet.pl")
+set(CPACK_PACKAGE_FILE_NAME "${APP_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "tablica")
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+
+# DEB
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${APP_COMPANY}")
+set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://zupanet.pl")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl3-0, libsdl3-ttf0, libsdl3-net0")
+
+# RPM
+set(CPACK_RPM_PACKAGE_LICENSE "GPL-2.0-only")
+set(CPACK_RPM_PACKAGE_GROUP "Applications/Utilities")
+set(CPACK_RPM_PACKAGE_URL "https://example.com")
+set(CPACK_RPM_PACKAGE_REQUIRES "SDL3 SDL3_ttf SDL3_net")
+
+set(CPACK_GENERATOR "DEB;RPM;TGZ")
+
+include(CPack)

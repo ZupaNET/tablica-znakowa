@@ -1,0 +1,28 @@
+def versionFile = file("${rootDir}/../version.txt")
+
+if(!versionFile.exists())
+{
+	throw new GradleException("Missing version.txt")
+}
+
+def version = versionFile.text.trim()
+
+def parts = version.split("\\.")
+
+if(parts.size() != 3)
+{
+	throw new GradleException("version.txt must contain MAJOR.MINOR.PATCH")
+}
+
+ext {
+	APP_VERSION_STRING = version
+
+    APP_VERSION_MAJOR = parts[0].toInteger()
+    APP_VERSION_MINOR = parts[1].toInteger()
+    APP_VERSION_PATCH = parts[2].toInteger()
+
+    APP_VERSION_CODE =
+            APP_VERSION_MAJOR * 10000 +
+            APP_VERSION_MINOR * 100 +
+            APP_VERSION_PATCH
+}

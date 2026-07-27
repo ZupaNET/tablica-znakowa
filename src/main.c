@@ -43,9 +43,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
 
 #ifndef PLATFORM_ANDROID
-    if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION, 1152 + app->config.display_padding, 768 - app->config.display_padding, app->config.display_fullscreen ? (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS) : SDL_WINDOW_RESIZABLE, &app->window, &app->renderer))
+    if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION_STRING, 1152 + app->config.display_padding, 768 - app->config.display_padding, app->config.display_fullscreen ? (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS) : SDL_WINDOW_RESIZABLE, &app->window, &app->renderer))
 #else
-    if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION, 0, 0, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS, &app->window, &app->renderer))
+    if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION_STRING, 0, 0, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS, &app->window, &app->renderer))
 #endif
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można utworzyć okna i silnika renderującego: %s\n", SDL_GetError());

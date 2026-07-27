@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
 }
 
+apply from: "../version.gradle"
+
 android {
     namespace "pl.zupanet.tablica"
     compileSdk 35
@@ -10,10 +12,26 @@ android {
         applicationId "pl.zupanet.tablica"
         minSdk 21
         targetSdk 35
-        versionCode @APP_VERSION_CODE@
-        versionName "@APP_VERSION_STRING@"
+        versionCode APP_VERSION_CODE
+        versionName APP_VERSION_STRING
+		
+		ndk {
+			abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+		}
+		
+		externalNativeBuild {
+			cmake {
+				arguments "-DANDROID_STL=c++_shared"
+			}
+		}
 
     }
+	
+	externalNativeBuild {
+		cmake {
+			path "../../CMakeLists.txt"
+		}
+	}
 
     signingConfigs {
         release {
@@ -49,6 +67,10 @@ android {
             ndk {
                 debugSymbolLevel 'NONE'
             }
+			
+			if(store == null) {
+				throw new GradleException("Missing ANDROID_KEYSTORE for release build")
+			}
         }
     }
     compileOptions {
@@ -58,23 +80,29 @@ android {
 
 	sourceSets {
         main {
-			assets.srcDirs = ["src/main/assets"]
-            jniLibs.srcDirs = ['src/main/jniLibs']
+			assets.srcDirs += ["../../resources/common"]
         }
     }
 
     applicationVariants.configureEach { variant ->
-        variant.outputs.configureEach {
-            def abi = "@ANDROID_ABI@"
+		variant.outputs.configureEach { output ->
 
-            outputFileName =
-                "TablicaZnakowa-" +
-                variant.versionName +
-                "-" +
-                abi +
-                "-" +
-                variant.buildType.name +
-                ".apk"
-        }
-    }
+			def abi = output.getFilter(
+				com.android.build.OutputFile.ABI
+			)
+
+			if (abi == null) {
+				abi = "universal"
+			}
+
+			output.outputFileName =
+				"TablicaZnakowa-" +
+				variant.versionName +
+				"-" +
+				abi +
+				"-" +
+				variant.buildType.name +
+				".apk"
+		}
+	}
 }

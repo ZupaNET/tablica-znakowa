@@ -1,36 +1,25 @@
-set(APP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
-set(APP_VERSION_MINOR ${PROJECT_VERSION_MINOR})
-set(APP_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+# --------------------------------------
+# Read version.txt
+# --------------------------------------
 
-math(EXPR APP_VERSION_CODE
-        "${APP_VERSION_MAJOR} * 100 +
-         ${APP_VERSION_MINOR} * 10 +
-         ${APP_VERSION_PATCH}")
+file(READ "${CMAKE_SOURCE_DIR}/version.txt" APP_VERSION_STRING)
 
-set(APP_VERSION_STRING
-    "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
-)
+string(STRIP "${APP_VERSION_STRING}" APP_VERSION_STRING)
 
-if(WIN32)
+if(NOT APP_VERSION_STRING MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
 
-    configure_file(
-        ${CMAKE_SOURCE_DIR}/resources/windows/version.rc.in
-        ${CMAKE_BINARY_DIR}/version.rc
-        @ONLY
-    )
-
-    configure_file(
-        ${CMAKE_SOURCE_DIR}/resources/windows/installer.iss.in
-        ${CMAKE_BINARY_DIR}/installer.iss
-        @ONLY
-    )
-
-elseif(ANDROID)
-
-    configure_file(
-        ${CMAKE_SOURCE_DIR}/android/app/build.gradle.in
-        ${CMAKE_BINARY_DIR}/build.gradle
-        @ONLY
-    )
+    message(FATAL_ERROR "Invalid version.txt format. Expected: MAJOR.MINOR.PATCH")
 
 endif()
+
+set(APP_VERSION_MAJOR "${CMAKE_MATCH_1}")
+set(APP_VERSION_MINOR "${CMAKE_MATCH_2}")
+set(APP_VERSION_PATCH "${CMAKE_MATCH_3}")
+
+math(EXPR APP_VERSION_CODE
+        "${APP_VERSION_MAJOR} * 10000 +
+         ${APP_VERSION_MINOR} * 100 +
+         ${APP_VERSION_PATCH}")
+
+message(STATUS "Version: ${APP_VERSION_STRING} (code ${APP_VERSION_CODE})")
+

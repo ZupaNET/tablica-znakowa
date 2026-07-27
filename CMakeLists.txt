@@ -1,26 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
-
-project(tablica
-	VERSION 1.0.3
-	LANGUAGES C
-)
-
-set(CMAKE_C_STANDARD 23)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-	"${CMAKE_BINARY_DIR}/bin"
-)
-
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-	"${CMAKE_BINARY_DIR}/lib"
-)
-
-# --------------------------------------
-# Application information
-# --------------------------------------
-set(APP_NAME "Tablica Znakowa")
-set(APP_COMPANY "ZupaNET Development")
+cmake_minimum_required(VERSION 3.22)
 
 # --------------------------------------
 # Version
@@ -28,6 +6,25 @@ set(APP_COMPANY "ZupaNET Development")
 
 include(cmake/Version.cmake)
 
+# --------------------------------------
+# Project settings
+# --------------------------------------
+
+project(tablica VERSION ${APP_VERSION_STRING} LANGUAGES C)
+
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+# --------------------------------------
+# Application information
+# --------------------------------------
+set(APP_NAME "Tablica Znakowa")
+set(APP_COMPANY "ZupaNET Development")
 
 # --------------------------------------
 # Dependencies
@@ -65,7 +62,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SDL3_net)
 
 # --------------------------------------
-# Application
+# Application sources and includes
 # --------------------------------------
 
 file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS
@@ -91,12 +88,8 @@ target_include_directories(tablica
 )
 
 # --------------------------------------
-# Resources and Libraries
+# Resources (only for development)
 # --------------------------------------
-
-set(APP_RESOURCES_DIR
-		${CMAKE_SOURCE_DIR}/resources/common
-)
 
 if(NOT ANDROID)
 
@@ -104,10 +97,8 @@ if(NOT ANDROID)
 			TARGET tablica POST_BUILD
 
 			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			${APP_RESOURCES_DIR}
+			"${CMAKE_SOURCE_DIR}/resources/common"
 			$<TARGET_FILE_DIR:tablica>/resources
-
-			COMMENT "Copying resources"
 	)
 
 endif()
@@ -144,13 +135,17 @@ endif()
 target_compile_definitions(tablica PRIVATE
 		APP_NAME="${APP_NAME}"
 		APP_COMPANY="${APP_COMPANY}"
-		APP_VERSION="${PROJECT_VERSION}"
+		APP_VERSION_STRING="${APP_VERSION_STRING}"
+		APP_VERSION_MAJOR=${APP_VERSION_MAJOR}
+		APP_VERSION_MINOR=${APP_VERSION_MINOR}
+		APP_VERSION_PATCH=${APP_VERSION_PATCH}
 )
 
 # --------------------------------------
-# Third party
+# Third party libraries
 # --------------------------------------
 
+# Inih
 add_library(inih STATIC
 		third_party/inih/ini.c
 )
@@ -158,6 +153,14 @@ add_library(inih STATIC
 target_include_directories(inih
 		PUBLIC
 		third_party/inih
+)
+
+# stb_image
+add_library(stb_image INTERFACE)
+
+target_include_directories(stb_image
+		INTERFACE
+		third_party/stb_image
 )
 
 # --------------------------------------
@@ -170,6 +173,7 @@ target_link_libraries(tablica
 		SDL3_ttf::SDL3_ttf
 		SDL3_net::SDL3_net
 		inih
+		stb_image
 )
 
 # --------------------------------------
@@ -179,9 +183,9 @@ target_link_libraries(tablica
 if(WIN32)
 
 	target_sources(tablica PRIVATE
-		${CMAKE_BINARY_DIR}/version.rc
-		resources/windows/app.rc
+		resources/windows/version.rc
 	)
+
 endif()
 
 # --------------------------------------
@@ -198,93 +202,15 @@ if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 # --------------------------------------
-# Target for APK generation
-# --------------------------------------
-
-if(ANDROID)
-
-	include(cmake/AndroidRuntime.cmake)
-
-	set(JNI_DIR "${CMAKE_BINARY_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}")
-
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		set(GRADLE_TASK assembleDebug)
-	else()
-		set(GRADLE_TASK assembleRelease)
-	endif()
-
-	add_custom_target(android_prepare
-			DEPENDS tablica
-
-			COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_BINARY_DIR}/android"
-
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${CMAKE_SOURCE_DIR}/android"
-			"${CMAKE_BINARY_DIR}/android"
-
-			COMMAND ${CMAKE_COMMAND} -E make_directory
-			"${CMAKE_BINARY_DIR}/android/app/src/main/assets"
-
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${APP_RESOURCES_DIR}"
-			"${CMAKE_BINARY_DIR}/android/app/src/main/assets"
-
-			COMMAND ${CMAKE_COMMAND} -E make_directory "${JNI_DIR}"
-
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${CMAKE_BINARY_DIR}/lib"
-			"${JNI_DIR}"
-
-			COMMAND ${CMAKE_COMMAND} -E copy
-			"${ANDROID_LIBCXX_SHARED}"
-			"${JNI_DIR}/"
-
-			COMMAND ${CMAKE_COMMAND} -E copy
-			"${CMAKE_BINARY_DIR}/build.gradle"
-			"${CMAKE_BINARY_DIR}/android/app/build.gradle"
-
-			COMMENT "Copying libraries and resources into APK"
-	)
-
-	add_custom_target(apk
-			COMMAND gradlew.bat ${GRADLE_TASK} --console=plain
-			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/android
-			DEPENDS tablica android_prepare
-			USES_TERMINAL
-
-			COMMENT "Building the APK"
-	)
-
-endif()
-
-# --------------------------------------
-# Target for Windows install generation
+# InnoSetup installer preparation
 # --------------------------------------
 
 if(WIN32)
 
-	include(cmake/FindInnoSetup.cmake)
-
-	add_custom_target(installer
-			COMMAND ${INNO_SETUP_COMPILER} "${CMAKE_BINARY_DIR}/installer.iss"
-			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-			DEPENDS tablica
-			USES_TERMINAL
-
-			COMMENT "Building the installer"
-	)
-
-	add_custom_target(zip-package
-			COMMAND
-			${CMAKE_COMMAND} -E tar
-			"cfv"
-			"${CMAKE_BINARY_DIR}/Output/tablica-znakowa-${APP_VERSION_STRING}-package.zip"
-			--format=zip
-			.
-
-			WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-
-			COMMENT "Creating ZIP package"
+	configure_file(
+			${CMAKE_SOURCE_DIR}/resources/windows/installer.iss.in
+			${CMAKE_BINARY_DIR}/installer.iss
+			@ONLY
 	)
 
 endif()

@@ -21,7 +21,7 @@
 #define DISPLAY_PADDING 8
 #define DISPLAY_MAX_FONTS 5
 
-static constexpr SDL_Keycode SERVICE_CODE[] =
+static const SDL_Keycode SERVICE_CODE[] =
 {
     SDLK_UP,
     SDLK_UP,
@@ -43,7 +43,7 @@ static const char* FONT_NAMES[] =
     "CozetteVector"
 };
 
-static constexpr float FONT_MAX_LINES[] =
+static const float FONT_MAX_LINES[] =
 {
     12.0f,
     10.0f,

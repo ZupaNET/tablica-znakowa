@@ -1,0 +1,7 @@
+Tablica Znakowa to nieskomplikowany, lekki i otwarto-źródłowy emulator tablicy znakowej LED produkowanej dawniej przez firmę MKEiA do wyświetlania pieśni kościelnych.
+
+- Współpraca z aplikacjami MKEiA: Edytor Pieśni i mobilne Pieśni!
+- Wbudowane czcionki używane na prawdziwej tablicy!
+- Menu serwisowe do prostej konfiguracji tablicy z poziomu klawiatury/pilota!
+- Obsługa najpopularniejszych platform dla tablic wyświetlających: Windows, Linux i Android TV!
+- Niewielki rozmiar aplikacji i mała liczba zależności!

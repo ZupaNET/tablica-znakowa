@@ -1,0 +1,1 @@
+Tablica Znakowa to emulator klasycznej znakowej tablicy LED od firmy MKEiA.

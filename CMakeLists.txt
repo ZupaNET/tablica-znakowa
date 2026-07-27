@@ -147,6 +147,10 @@ target_link_libraries(tablica
 		stb_image
 )
 
+if(UNIX AND NOT APPLE)
+	target_link_libraries(tablica PRIVATE m)
+endif()
+
 # --------------------------------------
 # Windows resources
 # --------------------------------------

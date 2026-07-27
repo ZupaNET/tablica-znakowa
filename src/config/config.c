@@ -77,9 +77,48 @@ static void config_populate_with_defaults(Config *config)
     config->foreground_color.r = 255; config->foreground_color.g = 0; config->foreground_color.b = 0;
 }
 
+static char *sdl_ini_reader(char *str, int num, void *stream)
+{
+    SDL_IOStream *io = stream;
+
+    int pos = 0;
+
+    while (pos < num - 1)
+    {
+        char c;
+
+        if (SDL_ReadIO(io, &c, 1) != 1)
+            break;
+
+        str[pos++] = c;
+
+        if (c == '\n')
+            break;
+    }
+
+    if (pos == 0)
+        return nullptr;
+
+    str[pos] = '\0';
+    return str;
+}
+
 bool config_load(const char *filename, Config *config)
 {
-    if (ini_parse(filename, handler, config) < 0)
+    SDL_IOStream *io = SDL_IOFromFile(filename, "rb");
+
+    if (!io)
+    {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,"Nie można otworzyć pliku konfiguracyjnego! Wczytuję ustawienia domyślne\n");
+        config_populate_with_defaults(config);
+        return config_save(filename, config);
+    }
+
+    const int result = ini_parse_stream(sdl_ini_reader, io, handler, config);
+
+    SDL_CloseIO(io);
+
+    if (result < 0)
     {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,"Nie można załadować pliku konfiguracyjnego! Wczytuję ustawienia domyślne\n");
         config_populate_with_defaults(config);

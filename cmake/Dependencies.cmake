@@ -31,6 +31,11 @@ endif()
 if(NOT USE_SYSTEM_SDL)
 
     # SDL3
+    set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+    set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+    set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+    set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+
     FetchContent_Declare(
             SDL3
             GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
@@ -40,17 +45,22 @@ if(NOT USE_SYSTEM_SDL)
     FetchContent_MakeAvailable(SDL3)
 
     # SDL3_ttf
+    set(SDLTTF_INSTALL OFF CACHE BOOL "" FORCE)
+    set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
+    set(FT_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+
     FetchContent_Declare(
             SDL3_ttf
             GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
             GIT_TAG main
     )
 
-    set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(SDL3_ttf)
 
 
     # SDL3_net
+    set(SDLNET_INSTALL OFF CACHE BOOL "" FORCE)
+
     FetchContent_Declare(
             SDL3_net
             GIT_REPOSITORY https://github.com/libsdl-org/SDL_net.git

@@ -24,7 +24,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 # Application information
 # --------------------------------------
 set(APP_NAME "Tablica Znakowa")
-set(APP_COMPANY "ZupaNET Development")
+if(NOT LINUX)
+	set(APP_COMPANY "ŻupaNET Development")
+else()
+	set(APP_COMPANY "ZupaNET Development")
+endif()
 string(TOLOWER "${APP_NAME}" APP_PACKAGE_NAME)
 string(REGEX REPLACE "[^a-z0-9]+" "-" APP_PACKAGE_NAME "${APP_PACKAGE_NAME}")
 string(REGEX REPLACE "^-|-$" "" APP_PACKAGE_NAME "${APP_PACKAGE_NAME}")
@@ -180,63 +184,108 @@ if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 # --------------------------------------
-# InnoSetup installer preparation
+# Installation
 # --------------------------------------
+
+include(GNUInstallDirs)
 
 if(WIN32)
 
-	configure_file(
-			${CMAKE_SOURCE_DIR}/resources/windows/installer.iss.in
-			${CMAKE_BINARY_DIR}/installer.iss
-			@ONLY
+	install(
+		TARGETS tablica
+		RUNTIME DESTINATION .
+	)
+
+	install(
+		DIRECTORY ${CMAKE_SOURCE_DIR}/resources/common/
+		DESTINATION resources
+	)
+
+	install(
+		FILES
+		$<TARGET_FILE:SDL3::SDL3>
+		$<TARGET_FILE:SDL3_ttf::SDL3_ttf>
+		$<TARGET_FILE:SDL3_net::SDL3_net>
+		DESTINATION .
+	)
+
+else()
+
+	install(
+		TARGETS tablica
+		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	)
+
+	install(
+		DIRECTORY ${CMAKE_SOURCE_DIR}/resources/common/
+		DESTINATION ${CMAKE_INSTALL_DATADIR}/tablica
 	)
 
 endif()
 
 # --------------------------------------
-# Installation on Linux
-# --------------------------------------
-
-include(GNUInstallDirs)
-
-install(
-	TARGETS tablica
-	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-install(
-	DIRECTORY ${CMAKE_SOURCE_DIR}/resources/common/
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/tablica
-)
-
-# --------------------------------------
 # CPack configuration
 # --------------------------------------
 
-set(CPACK_PACKAGE_NAME "${APP_PACKAGE_NAME}")
+if(NOT WIN32)
+	set(CPACK_PACKAGE_NAME "${APP_PACKAGE_NAME}")
+else()
+	set(CPACK_PACKAGE_NAME "${APP_NAME}")
+endif()
 set(CPACK_PACKAGE_VENDOR "${APP_COMPANY}")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tablica Znakowa")
+set(CPACK_PACKAGE_HOMEPAGE "https://zupanet.pl")
 set(CPACK_PACKAGE_CONTACT "devel@zupanet.pl")
 set(CPACK_PACKAGE_FILE_NAME "${APP_PACKAGE_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "tablica")
+if(NOT WIN32)
+	set(CPACK_PACKAGE_INSTALL_DIRECTORY "tablica")
+else()
+	set(CPACK_PACKAGE_INSTALL_DIRECTORY "${APP_NAME}")
+endif()
+set(CPACK_PACKAGE_CHECKSUM SHA256)
+set(CPACK_COMPONENTS_ALL Unspecified)
 
+set(CPACK_PACKAGE_EXECUTABLES "tablica;Tablica Znakowa")
+set(CPACK_CREATE_DESKTOP_LINKS tablica)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 
 # DEB
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${APP_COMPANY}")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://zupanet.pl")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl3-0, libsdl3-ttf0, libsdl3-net0")
 
 # RPM
 set(CPACK_RPM_PACKAGE_LICENSE "GPL-2.0-only")
 set(CPACK_RPM_PACKAGE_GROUP "Applications/Utilities")
-set(CPACK_RPM_PACKAGE_URL "https://example.com")
+set(CPACK_RPM_PACKAGE_URL "${CPACK_PACKAGE_HOMEPAGE}")
 set(CPACK_RPM_PACKAGE_REQUIRES "SDL3 SDL3_ttf SDL3_net")
 
-set(CPACK_GENERATOR "DEB;RPM;TGZ")
+# InnoSetup
+set(CPACK_INNOSETUP_ALLOW_CUSTOM_DIRECTORY ON)
+set(CPACK_INNOSETUP_LANGUAGES "polish")
+set(CPACK_INNOSETUP_IGNORE_README_PAGE ON)
+set(CPACK_INNOSETUP_USE_MODERN_WIZARD ON)
+set(CPACK_INNOSETUP_PROGRAM_MENU_FOLDER "${APP_NAME}")
+set(CPACK_INNOSETUP_headers_INSTALL_DIRECTORY "")
+set(CPACK_INNOSETUP_SETUP_DisableProgramGroupPage ON)
+set(CPACK_INNOSETUP_SETUP_PrivilegesRequired "lowest")
+set(CPACK_INNOSETUP_SETUP_PrivilegesRequiredOverridesAllowed "dialog")
+set(CPACK_INNOSETUP_SETUP_AllowNoIcons ON)
+set(CPACK_INNOSETUP_SETUP_UninstallDisplayIcon "{app}/tablica.exe")
+set(CPACK_INNOSETUP_SETUP_VersionInfoCompany "${APP_COMPANY}")
+set(CPACK_INNOSETUP_SETUP_VersionInfoVersion "${PROJECT_VERSION}")
+set(CPACK_INNOSETUP_SETUP_VersionInfoDescription "${APP_NAME}")
+set(CPACK_INNOSETUP_SETUP_VersionInfoTextVersion "${PROJECT_VERSION}")
+set(CPACK_INNOSETUP_SETUP_VersionInfoProductName "${APP_NAME}")
+set(CPACK_INNOSETUP_SETUP_VersionInfoCopyright "Copyright (c) 2026 ${APP_COMPANY}")
+set(CPACK_INNOSETUP_SETUP_AppPublisherURL "${CPACK_PACKAGE_HOMEPAGE}")
+set(CPACK_INNOSETUP_SETUP_AppSupportURL "${CPACK_PACKAGE_HOMEPAGE}")
+set(CPACK_INNOSETUP_SETUP_AppUpdatesURL "${CPACK_PACKAGE_HOMEPAGE}")
+
+
+set(CPACK_GENERATOR "DEB;RPM;TGZ;ZIP;INNOSETUP")
 
 include(CPack)

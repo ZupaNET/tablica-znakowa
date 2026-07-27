@@ -97,7 +97,7 @@ endif()
 # Install runtime dependencies
 # --------------------------------------
 
-if(TARGET SDL3-shared)
+if(TARGET SDL3-shared AND NOT WIN32)
     install(
         TARGETS SDL3-shared
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -105,7 +105,7 @@ if(TARGET SDL3-shared)
     )
 endif()
 
-if(TARGET SDL3_ttf-shared)
+if(TARGET SDL3_ttf-shared AND NOT WIN32)
     install(
         TARGETS SDL3_ttf-shared
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -113,7 +113,7 @@ if(TARGET SDL3_ttf-shared)
     )
 endif()
 
-if(TARGET SDL3_net-shared)
+if(TARGET SDL3_net-shared AND NOT WIN32)
     install(
         TARGETS SDL3_net-shared
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

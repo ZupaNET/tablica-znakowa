@@ -25,6 +25,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 # --------------------------------------
 set(APP_NAME "Tablica Znakowa")
 set(APP_COMPANY "ZupaNET Development")
+string(TOLOWER "${APP_NAME}" APP_PACKAGE_NAME)
+string(REGEX REPLACE "[^a-z0-9]+" "-" APP_PACKAGE_NAME "${APP_PACKAGE_NAME}")
+string(REGEX REPLACE "^-|-$" "" APP_PACKAGE_NAME "${APP_PACKAGE_NAME}")
 
 # --------------------------------------
 # Dependencies
@@ -210,13 +213,13 @@ install(
 # CPack configuration
 # --------------------------------------
 
-set(CPACK_PACKAGE_NAME "${APP_NAME}")
+set(CPACK_PACKAGE_NAME "${APP_PACKAGE_NAME}")
 set(CPACK_PACKAGE_VENDOR "${APP_COMPANY}")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tablica Znakowa")
 set(CPACK_PACKAGE_CONTACT "devel@zupanet.pl")
-set(CPACK_PACKAGE_FILE_NAME "${APP_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
+set(CPACK_PACKAGE_FILE_NAME "${APP_PACKAGE_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "tablica")
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")

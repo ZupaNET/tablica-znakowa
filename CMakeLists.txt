@@ -231,7 +231,7 @@ endif()
 set(CPACK_PACKAGE_VENDOR "${APP_COMPANY}")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 
-set(CPACK_PACKAGE_DESCRIPTION
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
 	"Tablica Znakowa to emulator klasycznej znakowej tablicy LED od firmy MKEiA.")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://zupanet.pl")
 set(CPACK_PACKAGE_CONTACT "devel@zupanet.pl")

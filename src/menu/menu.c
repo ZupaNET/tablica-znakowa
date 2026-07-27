@@ -649,7 +649,7 @@ static void service_menu_license_page_render(ServiceMenu *menu, const DisplayCon
     display_draw_line_on_back_buffer(display, 6, "CozetteVector (Samhain & contrib, MIT)");
     display_draw_line_on_back_buffer(display, 7, "MiniForma2, MiniSet2 (Bartek Nowak)");
     display_draw_line_on_back_buffer(display, 8, "Monocraft (Idress Hassan, SIL OFL 1.1)");
-    display_draw_line_on_back_buffer(display, 9, "FreeSans (GNU Project, GNU GPL v2)");
+    display_draw_line_on_back_buffer(display, 9, "FreeSans (GNU Project, GNU GPL v3)");
     display_draw_line_on_back_buffer(display, 10, "Third-party licenses included.");
     display_draw_line_on_back_buffer(display, 11, "Source code available with this software.");
 }

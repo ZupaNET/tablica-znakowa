@@ -24,11 +24,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 # Application information
 # --------------------------------------
 set(APP_NAME "Tablica Znakowa")
-if(NOT LINUX)
-	set(APP_COMPANY "ŻupaNET Development")
-else()
-	set(APP_COMPANY "ZupaNET Development")
-endif()
+set(APP_COMPANY "ŻupaNET Development")
 string(TOLOWER "${APP_NAME}" APP_PACKAGE_NAME)
 string(REGEX REPLACE "[^a-z0-9]+" "-" APP_PACKAGE_NAME "${APP_PACKAGE_NAME}")
 string(REGEX REPLACE "^-|-$" "" APP_PACKAGE_NAME "${APP_PACKAGE_NAME}")

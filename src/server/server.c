@@ -66,7 +66,7 @@ void server_parse_client_command(DisplayContext *display, Client *client, const 
     }
     else if (SDL_strncmp(line, "l", 1) == 0)
     {
-        if (SDL_strlen(line) < 4)
+        if (SDL_strlen(line) < 3)
             return;
 
         if (!SDL_isdigit(line[1]) || !SDL_isdigit(line[2]))

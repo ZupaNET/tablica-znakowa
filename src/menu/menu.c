@@ -201,7 +201,7 @@ static void service_menu_edit_ip(ServiceMenu *menu, InputEvent ev)
         return;
     }
 
-    if (ev.action == INPUT_RIGHT)
+    if (ev.action == INPUT_RIGHT || ev.action == INPUT_DELIMITER)
     {
         if (menu->input_length < SDL_arraysize(menu->input_buffer)-1)
         {
@@ -330,7 +330,7 @@ static void service_menu_edit_color(ServiceMenu *menu, InputEvent ev)
         return;
     }
 
-    if (ev.action == INPUT_RIGHT)
+    if (ev.action == INPUT_RIGHT || ev.action == INPUT_DELIMITER)
     {
         if (menu->input_length < SDL_arraysize(menu->input_buffer)-1)
         {

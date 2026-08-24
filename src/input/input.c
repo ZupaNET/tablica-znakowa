@@ -67,6 +67,9 @@ InputEvent input_translate(SDL_Keycode key)
         case SDLK_7: ev.action = INPUT_DIGIT; ev.digit = 7; break;
         case SDLK_8: ev.action = INPUT_DIGIT; ev.digit = 8; break;
         case SDLK_9: ev.action = INPUT_DIGIT; ev.digit = 9; break;
+
+        case SDLK_PERIOD:
+        case SDLK_COMMA: ev.action = INPUT_DELIMITER; break;
         default: ev.action = INPUT_NONE; break;
     }
 

@@ -20,9 +20,10 @@ typedef enum
     INPUT_RIGHT,
 
     INPUT_DIGIT,
+    INPUT_DELIMITER,
 
     INPUT_OK,
-    INPUT_BACK
+    INPUT_BACK,
 } InputAction;
 
 typedef struct

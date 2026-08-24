@@ -18,7 +18,8 @@ typedef struct
     char *lines[DISPLAY_MAX_LINES];
     unsigned int brightness;
     TTF_Font *font;
-    float maximum_lines;
+    float line_height;
+    float font_size;
 } DisplayState;
 
 typedef struct

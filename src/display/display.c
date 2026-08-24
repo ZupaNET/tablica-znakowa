@@ -13,7 +13,8 @@ static void display_buffer_init(DisplayState *buffer, TTF_Font *default_font)
 {
     buffer->brightness = 4;
     buffer->font = default_font;
-    buffer->maximum_lines = DISPLAY_MAX_LINES;
+    buffer->line_height = FONT_LINE_HEIGHTS[0];
+    buffer->font_size = FONT_SIZES[0];
     for (int i = 1; i < DISPLAY_MAX_LINES; i++)
     {
         buffer->lines[i] = (char*)SDL_malloc(1);
@@ -137,7 +138,8 @@ void display_change_font(const DisplayContext *display, int font_number)
         return;
 
     display->back_buffer->font = display->fonts[font_number];
-    display->back_buffer->maximum_lines = FONT_MAX_LINES[font_number];
+    display->back_buffer->line_height = FONT_LINE_HEIGHTS[font_number];
+    display->back_buffer->font_size = FONT_SIZES[font_number];
 }
 
 void display_clear(DisplayContext *display)

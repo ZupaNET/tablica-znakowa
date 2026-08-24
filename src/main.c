@@ -188,11 +188,10 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         .a = 255
     };
 
-    float line_height = (float)TTF_GetFontHeight(state->font);
-    float available_height = (float)screen_h - (float)app->config.display_padding * 2;
-    float scale = available_height / (line_height * state->maximum_lines);
-
     float y = (float)app->config.display_padding;
+    float scale = min((float)screen_h / DISPLAY_TRUE_HEIGHT, (float)screen_w / DISPLAY_TRUE_WIDTH);
+
+    TTF_SetFontSizeDPI(state->font, state->font_size * scale, 72, 72);
 
     for (int i = 0; i < DISPLAY_MAX_LINES; i++)
     {
@@ -200,7 +199,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         const char *text = state->lines[i];
         if (!text || !text[0])
         {
-            y += line_height * scale;
+            y += state->line_height * scale;
             continue;
         }
 
@@ -218,15 +217,15 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         SDL_FRect dst = {
             .x = (float)app->config.display_padding,
             .y = y,
-            .w = (float)surface->w * scale,
-            .h = (float)surface->h * scale
+            .w = (float)surface->w,
+            .h = (float)surface->h
         };
 
         SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_LINEAR);
 
         SDL_RenderTexture(app->renderer, texture, nullptr, &dst);
 
-        y += line_height * scale;
+        y += state->line_height * scale;
 
         SDL_DestroyTexture(texture);
         SDL_DestroySurface(surface);

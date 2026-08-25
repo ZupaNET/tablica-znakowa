@@ -1,0 +1,7 @@
+Tablica Znakowa is a simple, lightweight, and open-source emulator of the LED display board formerly manufactured by MKEiA for displaying church hymns.
+
+- Compatible with MKEiA apps: Edytor Pieśni and mobile Pieśni!
+- Built-in fonts used on the actual display!
+- Service menu for easy configuration of the display via keyboard or remote control!
+- Support for the most popular platforms for display boards: Windows, Linux, and Android TV!
+- Small app size and few dependencies!

@@ -1,0 +1,1 @@
+Tablica Znakowa is an emulator of the classic character LED display from MKEiA.

@@ -1,0 +1,900 @@
+name: Build & Prepare to release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows ${{ matrix.arch }}
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            toolchain: windows-x86_64.cmake
+
+          - arch: arm64
+            toolchain: windows-arm64.cmake
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install LLVM-MinGW-UCRT
+        shell: pwsh
+        env:
+          LLVM_MINGW_VERSION: 20260616
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = $env:LLVM_MINGW_VERSION
+          $archive = "llvm-mingw-$version-ucrt-x86_64.zip"
+          $url = `
+            "https://github.com/mstorsjo/llvm-mingw/releases/download/" +
+            "$version/$archive"
+          
+          $download = Join-Path $env:RUNNER_TEMP $archive
+          $install = Join-Path $env:RUNNER_TEMP "llvm-mingw"
+          
+          Write-Host "Downloading LLVM-MinGW:"
+          Write-Host $url
+          
+          Invoke-WebRequest -Uri $url -OutFile $download
+          
+          New-Item -ItemType Directory -Force -Path $install | Out-Null
+          
+          Expand-Archive -Path $download -DestinationPath $install
+          
+          $llvmRoot = Get-ChildItem -Path $install -Directory | Select-Object -First 1
+          
+          if (-not $llvmRoot) {
+            throw "LLVM-MinGW directory was not found"
+          }
+          
+          $llvmBin = Join-Path $llvmRoot.FullName "bin"
+          
+          if (-not (Test-Path "$llvmBin\clang.exe")) {
+            throw "clang.exe was not found in LLVM-MinGW"
+          }
+          
+          Write-Host "LLVM-MinGW root:"
+          Write-Host $llvmRoot.FullName
+          
+          Write-Host "LLVM-MinGW bin:"
+          Write-Host $llvmBin
+
+          $llvmBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+          "LLVM_MINGW_ROOT=$($llvmRoot.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Configure CMake
+        shell: pwsh
+        env:
+          TOOLCHAIN: ${{ matrix.toolchain }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $clang = (Join-Path $env:LLVM_MINGW_ROOT "bin\clang.exe") -replace '\\', '/'
+          $clangxx = (Join-Path $env:LLVM_MINGW_ROOT "bin\clang++.exe") -replace '\\', '/'
+          $windres = (Join-Path $env:LLVM_MINGW_ROOT "bin\llvm-windres.exe") -replace '\\', '/'
+
+          if (-not (Test-Path $clang)) {
+            throw "clang.exe not found"
+          }
+
+          if (-not (Test-Path $clangxx)) {
+            throw "clang++.exe not found"
+          }
+
+          if (-not (Test-Path $windres)) {
+            throw "llvm-windres.exe not found"
+          }
+
+          Write-Host "Architecture: $env:TARGET_TRIPLE"
+          Write-Host "clang:        $clang"
+          Write-Host "clang++:      $clangxx"
+          Write-Host "windres:      $windres"
+
+          cmake `
+            -S . `
+            -B build/Windows-Release `
+            -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="cmake/toolchains/$env:TOOLCHAIN" `
+            -DCPACK_INNOSETUP_EXECUTABLE="C:/Program Files (x86)/Inno Setup 6/ISCC.exe"
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake `
+            --build build/Windows-Release `
+            --config Release `
+            --parallel
+
+      - name: Create ZIP package
+        shell: pwsh
+        working-directory: build/Windows-Release
+        run: |
+          cpack -G ZIP -C Release
+
+      - name: Create Inno Setup package
+        shell: pwsh
+        working-directory: build/Windows-Release
+        run: |
+          cpack -G INNOSETUP -C Release
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-${{ matrix.arch }}
+          if-no-files-found: error
+          path: |
+            build/Windows-Release/*.exe
+            build/Windows-Release/*.exe.sha256
+            build/Windows-Release/*.zip
+            build/Windows-Release/*.zip.sha256
+
+  build-linux-tgz:
+    name: Build Linux ${{ matrix.arch }} TGZ
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            deb_arch: amd64
+            triplet: x86_64-linux-gnu
+            c_compiler: gcc
+            cxx_compiler: g++
+
+          - arch: aarch64
+            deb_arch: arm64
+            triplet: aarch64-linux-gnu
+            c_compiler: aarch64-linux-gnu-gcc
+            cxx_compiler: aarch64-linux-gnu-g++
+
+          - arch: armv7l
+            deb_arch: armhf
+            triplet: arm-linux-gnueabihf
+            c_compiler: arm-linux-gnueabihf-gcc
+            cxx_compiler: arm-linux-gnueabihf-g++
+
+          - arch: ppc64le
+            deb_arch: ppc64el
+            triplet: powerpc64le-linux-gnu
+            c_compiler: powerpc64le-linux-gnu-gcc
+            cxx_compiler: powerpc64le-linux-gnu-g++
+
+          - arch: riscv64
+            deb_arch: riscv64
+            triplet: riscv64-linux-gnu
+            c_compiler: riscv64-linux-gnu-gcc
+            cxx_compiler: riscv64-linux-gnu-g++
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install cross compiler and build tools
+        run: |
+          set -euo pipefail
+          
+          sudo apt-get update
+          
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            build-essential \
+            pkg-config \
+            file \
+            dpkg-dev \
+            binutils \
+            mmdebstrap \
+            debian-archive-keyring \
+            arch-test
+          
+          case "${{ matrix.deb_arch }}" in
+            amd64)
+              ;;
+            arm64)
+              sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+              ;;
+            armhf)
+              sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+              ;;
+            ppc64el)
+              sudo apt-get install -y gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu
+              ;;
+            riscv64)
+              sudo apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+              ;;
+          esac
+
+      - name: Create Debian Trixie sysroot
+        env:
+          TARGET_ARCH: ${{ matrix.deb_arch }}
+        run: |
+          set -euo pipefail
+
+          SYSROOT="/opt/sysroot/${TARGET_ARCH}"
+
+          sudo rm -rf "${SYSROOT}"
+          sudo mkdir -p "${SYSROOT}"
+          
+          KEYRING="$(find /usr/share/keyrings -maxdepth 1 -type f \
+            \( -name 'debian-archive-keyring.gpg' -o -name 'debian-archive-keyring.pgp' \) \
+            | head -1)"
+          
+          test -n "${KEYRING}"
+          test -r "${KEYRING}"
+
+          sudo mmdebstrap \
+            --mode=root \
+            --variant=extract \
+            --architectures="${TARGET_ARCH}" \
+            --keyring="${KEYRING}" \
+            --include="
+              libc6-dev,
+              libgcc-14-dev,
+              libstdc++-14-dev,
+
+              libasound2-dev,
+              libpulse-dev,
+              libaudio-dev,
+              libfribidi-dev,
+              libjack-dev,
+              libsndio-dev,
+
+              libx11-dev,
+              libxext-dev,
+              libxrandr-dev,
+              libxcursor-dev,
+              libxfixes-dev,
+              libxi-dev,
+              libxss-dev,
+              libxtst-dev,
+              libxkbcommon-dev,
+
+              libdrm-dev,
+              libgbm-dev,
+              libgl1-mesa-dev,
+              libgles2-mesa-dev,
+              libegl1-mesa-dev,
+
+              libdbus-1-dev,
+              libibus-1.0-dev,
+              libudev-dev,
+              libthai-dev,
+              libusb-1.0-0-dev
+            " \
+            trixie \
+            "${SYSROOT}" \
+            https://deb.debian.org/debian
+          
+          echo "SYSROOT=${SYSROOT}" >> "${GITHUB_ENV}"
+
+      - name: Create CMake toolchain
+        env:
+          ARCH: ${{ matrix.arch }}
+          TRIPLET: ${{ matrix.triplet }}
+          C_COMPILER: ${{ matrix.c_compiler }}
+          CXX_COMPILER: ${{ matrix.cxx_compiler }}
+          DEB_ARCH: ${{ matrix.deb_arch }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p "${RUNNER_TEMP}/toolchains"
+
+          cat > "${RUNNER_TEMP}/toolchains/linux-${ARCH}.cmake" <<EOF
+          set(CMAKE_SYSTEM_NAME Linux)
+          set(CMAKE_SYSTEM_PROCESSOR ${ARCH})
+
+          set(CMAKE_C_COMPILER ${C_COMPILER})
+          set(CMAKE_CXX_COMPILER ${CXX_COMPILER})
+
+          set(CMAKE_C_COMPILER_TARGET ${TRIPLET})
+          set(CMAKE_CXX_COMPILER_TARGET ${TRIPLET})
+
+          set(CMAKE_SYSROOT "/opt/sysroot/${DEB_ARCH}")
+
+          set(CMAKE_FIND_ROOT_PATH
+              "/opt/sysroot/${DEB_ARCH}"
+          )
+
+          set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+          set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+          EOF
+
+      - name: Configure CMake
+        env:
+          ARCH: ${{ matrix.arch }}
+          TRIPLET: ${{ matrix.triplet }}
+        run: |
+          set -euo pipefail
+
+          export PKG_CONFIG_DIR=""
+          export PKG_CONFIG_SYSROOT_DIR="${SYSROOT}"
+
+          export PKG_CONFIG_LIBDIR="\
+          ${SYSROOT}/usr/lib/${TRIPLET}/pkgconfig:\
+          ${SYSROOT}/usr/lib/pkgconfig:\
+          ${SYSROOT}/usr/share/pkgconfig"
+
+          cmake \
+            -S . \
+            -B build/Linux-Release \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSROOT="${SYSROOT}" \
+            -DCMAKE_TOOLCHAIN_FILE="${RUNNER_TEMP}/toolchains/linux-${ARCH}.cmake"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+
+          cmake \
+            --build build/Linux-Release \
+            --parallel
+
+      - name: Create TGZ
+        working-directory: build/Linux-Release
+        run: |
+          set -euo pipefail
+
+          cpack -G TGZ
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-tgz-${{ matrix.arch }}
+          path: |
+            build/Linux-Release/*.tar.gz
+            build/Linux-Release/*.tar.gz.sha256
+          if-no-files-found: error
+
+
+  build-linux-deb:
+    name: Build Linux ${{ matrix.arch }} DEB
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            deb_arch: amd64
+            triplet: x86_64-linux-gnu
+            c_compiler: gcc
+            cxx_compiler: g++
+
+          - arch: aarch64
+            deb_arch: arm64
+            triplet: aarch64-linux-gnu
+            c_compiler: aarch64-linux-gnu-gcc
+            cxx_compiler: aarch64-linux-gnu-g++
+
+          - arch: armv7l
+            deb_arch: armhf
+            triplet: arm-linux-gnueabihf
+            c_compiler: arm-linux-gnueabihf-gcc
+            cxx_compiler: arm-linux-gnueabihf-g++
+
+          - arch: ppc64le
+            deb_arch: ppc64el
+            triplet: powerpc64le-linux-gnu
+            c_compiler: powerpc64le-linux-gnu-gcc
+            cxx_compiler: powerpc64le-linux-gnu-g++
+
+          - arch: riscv64
+            deb_arch: riscv64
+            triplet: riscv64-linux-gnu
+            c_compiler: riscv64-linux-gnu-gcc
+            cxx_compiler: riscv64-linux-gnu-g++
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install cross compiler and build tools
+        run: |
+          set -euo pipefail
+          
+          sudo apt-get update
+          
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            build-essential \
+            pkg-config \
+            dpkg-dev \
+            file \
+            binutils \
+            mmdebstrap \
+            debian-archive-keyring \
+            arch-test
+          
+          case "${{ matrix.deb_arch }}" in
+            amd64)
+              ;;
+            arm64)
+              sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+              ;;
+            armhf)
+              sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+              ;;
+            ppc64el)
+              sudo apt-get install -y gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu
+              ;;
+            riscv64)
+              sudo apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+              ;;
+          esac
+
+      - name: Create Debian Trixie sysroot
+        env:
+          TARGET_ARCH: ${{ matrix.deb_arch }}
+        run: |
+          set -euo pipefail
+
+          SYSROOT="/opt/sysroot/${TARGET_ARCH}"
+
+          sudo rm -rf "${SYSROOT}"
+          sudo mkdir -p "${SYSROOT}"
+          
+          KEYRING="$(find /usr/share/keyrings -maxdepth 1 -type f \
+            \( -name 'debian-archive-keyring.gpg' -o -name 'debian-archive-keyring.pgp' \) \
+            | head -1)"
+          
+          test -n "${KEYRING}"
+          test -r "${KEYRING}"
+
+          sudo mmdebstrap \
+            --mode=root \
+            --variant=extract \
+            --architectures="${TARGET_ARCH}" \
+            --keyring="${KEYRING}" \
+            --include="
+              libc6-dev,
+              libgcc-14-dev,
+              libstdc++-14-dev,
+              libsdl3-dev,
+              libsdl3-ttf-dev,
+              libsdl3-0,
+              libsdl3-ttf0
+            " \
+            trixie \
+            "${SYSROOT}" \
+            https://deb.debian.org/debian
+          
+          echo "SYSROOT=${SYSROOT}" >> "${GITHUB_ENV}"
+
+      - name: Create CMake toolchain
+        env:
+          ARCH: ${{ matrix.arch }}
+          TRIPLET: ${{ matrix.triplet }}
+          C_COMPILER: ${{ matrix.c_compiler }}
+          CXX_COMPILER: ${{ matrix.cxx_compiler }}
+          DEB_ARCH: ${{ matrix.deb_arch }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p "${RUNNER_TEMP}/toolchains"
+
+          cat > "${RUNNER_TEMP}/toolchains/linux-${ARCH}.cmake" <<EOF
+          set(CMAKE_SYSTEM_NAME Linux)
+          set(CMAKE_SYSTEM_PROCESSOR ${ARCH})
+
+          set(CMAKE_C_COMPILER ${C_COMPILER})
+          set(CMAKE_CXX_COMPILER ${CXX_COMPILER})
+
+          set(CMAKE_C_COMPILER_TARGET ${TRIPLET})
+          set(CMAKE_CXX_COMPILER_TARGET ${TRIPLET})
+
+          set(CMAKE_SYSROOT "/opt/sysroot/${DEB_ARCH}")
+
+          set(CMAKE_FIND_ROOT_PATH
+              "/opt/sysroot/${DEB_ARCH}"
+          )
+
+          set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+          set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+          
+          set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS
+            "/opt/sysroot/${DEB_ARCH}/usr/lib"
+            "/opt/sysroot/${DEB_ARCH}/usr/lib/${TRIPLET}"
+          )
+          EOF
+
+      - name: Configure CMake
+        env:
+          ARCH: ${{ matrix.arch }}
+          TRIPLET: ${{ matrix.triplet }}
+        run: |
+          set -euo pipefail
+
+          export PKG_CONFIG_DIR=""
+          export PKG_CONFIG_SYSROOT_DIR="${SYSROOT}"
+
+          export PKG_CONFIG_LIBDIR="\
+          ${SYSROOT}/usr/lib/${TRIPLET}/pkgconfig:\
+          ${SYSROOT}/usr/lib/pkgconfig:\
+          ${SYSROOT}/usr/share/pkgconfig"
+
+          cmake \
+            -S . \
+            -B build/Linux-Release \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSROOT="${SYSROOT}" \
+            -DCMAKE_TOOLCHAIN_FILE="${RUNNER_TEMP}/toolchains/linux-${ARCH}.cmake"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+
+          cmake \
+            --build build/Linux-Release \
+            --parallel
+
+      - name: Create DEB
+        working-directory: build/Linux-Release
+        run: |
+          set -euo pipefail
+
+          cpack -G DEB
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-deb-${{ matrix.arch }}
+          path: |
+            build/Linux-Release/*.deb
+            build/Linux-Release/*.deb.sha256
+          if-no-files-found: error
+
+  build-linux-rpm:
+    name: Build Linux ${{ matrix.arch }} RPM
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            rpm_arch: x86_64
+            triple: x86_64-redhat-linux
+
+          - arch: aarch64
+            rpm_arch: aarch64
+            triple: aarch64-redhat-linux
+
+          - arch: ppc64le
+            rpm_arch: ppc64le
+            triple: ppc64le-redhat-linux
+
+          - arch: riscv64
+            rpm_arch: riscv64
+            triple: riscv64-redhat-linux
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install build tools
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            clang \
+            lld \
+            cmake \
+            ninja-build \
+            rpm \
+            rpm2cpio \
+            cpio \
+            curl \
+            git \
+            pkg-config \
+            file \
+            dnf \
+            dnf-plugins-core
+          
+          case "${{ matrix.arch }}" in
+          x86_64) ;;
+          aarch64) sudo apt-get install -y binutils-aarch64-linux-gnu ;;
+          ppc64le) sudo apt-get install -y binutils-powerpc64le-linux-gnu ;;
+          riscv64) sudo apt-get install -y binutils-riscv64-linux-gnu ;;
+          esac
+
+      - name: Prepare AlmaLinux Kitten sysroot
+        env:
+          ARCH: ${{ matrix.arch }}
+          RPM_ARCH: ${{ matrix.rpm_arch }}
+        run: |
+          set -euo pipefail
+
+          SYSROOT="${RUNNER_TEMP}/almalinux-${ARCH}"
+
+          rm -rf "${SYSROOT}"
+          mkdir -p "${SYSROOT}"
+
+          echo "SYSROOT=${SYSROOT}" >> "${GITHUB_ENV}"
+
+          cat > "${RUNNER_TEMP}/almalinux.repo" <<EOF
+          [baseos]
+          name=AlmaLinux Kitten 10 BaseOS
+          baseurl=https://kitten.repo.almalinux.org/10-kitten/BaseOS/${RPM_ARCH}/os/
+          enabled=1
+          gpgcheck=0
+
+          [appstream]
+          name=AlmaLinux Kitten 10 AppStream
+          baseurl=https://kitten.repo.almalinux.org/10-kitten/AppStream/${RPM_ARCH}/os/
+          enabled=1
+          gpgcheck=0
+
+          [crb]
+          name=AlmaLinux Kitten 10 CRB
+          baseurl=https://kitten.repo.almalinux.org/10-kitten/CRB/${RPM_ARCH}/os/
+          enabled=1
+          gpgcheck=0
+          EOF
+
+          mkdir -p "${RUNNER_TEMP}/rpm-cache"
+
+          sudo dnf \
+            --config "${RUNNER_TEMP}/almalinux.repo" \
+            --releasever=10 \
+            --forcearch="${RPM_ARCH}" \
+            --setopt=install_weak_deps=False \
+            --setopt=keepcache=False \
+            download \
+            --resolve \
+            --alldeps \
+            --destdir="${RUNNER_TEMP}/rpm-cache" \
+            glibc \
+            glibc-devel \
+            gcc \
+            gcc-c++ \
+            libgcc \
+            libstdc++ \
+            libstdc++-devel \
+            SDL3-devel
+
+          for rpm in "${RUNNER_TEMP}"/rpm-cache/*.rpm; do
+            rpm2cpio "${rpm}" | \
+              sudo cpio \
+                --extract \
+                --make-directories \
+                --no-absolute-filenames \
+                --quiet \
+                --directory "${SYSROOT}"
+          done
+
+      - name: Create RPM toolchain
+        env:
+          ARCH: ${{ matrix.arch }}
+          TARGET_TRIPLE: ${{ matrix.triple }}
+        run: |
+          set -euo pipefail
+          
+          mkdir -p "${RUNNER_TEMP}/toolchains"
+          
+          cat > "${RUNNER_TEMP}/toolchains/linux-rpm-${ARCH}.cmake" <<EOF
+          set(CMAKE_SYSTEM_NAME Linux)
+          set(CMAKE_SYSTEM_PROCESSOR ${ARCH})
+          
+          set(CMAKE_C_COMPILER clang)
+          set(CMAKE_CXX_COMPILER clang++)
+          
+          set(CMAKE_C_COMPILER_TARGET ${TARGET_TRIPLE})
+          set(CMAKE_CXX_COMPILER_TARGET ${TARGET_TRIPLE})
+          
+          set(CMAKE_SYSROOT "${SYSROOT}")
+          
+          set(CMAKE_C_FLAGS "--gcc-toolchain=${SYSROOT}")
+          set(CMAKE_CXX_FLAGS "--gcc-toolchain=${SYSROOT}")
+          
+          set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld")
+          set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld")
+          set(CMAKE_MODULE_LINKER_FLAGS "-fuse-ld=lld")
+          
+          set(CMAKE_LINKER_TYPE LLD)
+          
+          set(CMAKE_FIND_ROOT_PATH
+              "${SYSROOT}"
+          )
+          
+          set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+          set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+          EOF
+          
+          case "${ARCH}" in
+            x86_64) echo "RPM_STRIP=strip" >> "${GITHUB_ENV}" ;;
+            aarch64) echo "RPM_STRIP=aarch64-linux-gnu-strip" >> "${GITHUB_ENV}" ;;
+            ppc64le) echo "RPM_STRIP=powerpc64le-linux-gnu-strip" >> "${GITHUB_ENV}" ;;
+            riscv64) echo "RPM_STRIP=riscv64-linux-gnu-strip" >> "${GITHUB_ENV}" ;;
+          esac
+
+      - name: Configure CMake
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+
+          export PKG_CONFIG_DIR=""
+          export PKG_CONFIG_SYSROOT_DIR="${SYSROOT}"
+
+          export PKG_CONFIG_LIBDIR="${SYSROOT}/usr/lib/pkgconfig:${SYSROOT}/usr/lib64/pkgconfig:${SYSROOT}/usr/share/pkgconfig"
+
+          cmake \
+            -S . \
+            -B build/Linux-Release \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="${RUNNER_TEMP}/toolchains/linux-rpm-${ARCH}.cmake" \
+            -DCPACK_RPM_PACKAGE_ARCHITECTURE="${ARCH}"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+
+          cmake \
+            --build build/Linux-Release \
+            --parallel
+
+      - name: Create RPM package
+        working-directory: build/Linux-Release
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+
+          cpack -G RPM -D "CPACK_RPM_SPEC_MORE_DEFINE=%define __strip ${RPM_STRIP}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-rpm-${{ matrix.arch }}
+          path: |
+            build/Linux-Release/*.rpm
+            build/Linux-Release/*.rpm.sha256
+          if-no-files-found: error
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+
+    environment:
+      name: android-release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: echo "version=$(tr -d '\r\n' < version.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      - name: Decode Keystore
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v2
+        with:
+          fileName: 'release_key.jks'
+          fileDir: 'android/app/'
+          encodedString: ${{ secrets.SIGNING_KEY }}
+
+      - name: Build Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+        env:
+          ANDROID_KEYSTORE: ${{ github.workspace }}/android/app/release_key.jks
+          ANDROID_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-universal-release-signed
+          if-no-files-found: error
+          path: android/app/build/**/*.apk
+
+  release:
+    name: Create Draft Release
+    runs-on: ubuntu-latest
+    needs:
+      - build-windows
+      - build-linux-tgz
+      - build-linux-deb
+      - build-linux-rpm
+      - build-android
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Generate changelog
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          writeToFile: false
+          useGitmojis: false
+          includeInvalidCommits: false
+          token: ${{ github.token }}
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: windows-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: linux-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Download Android artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: android-universal-release-signed
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+
+          body: |
+            ${{ steps.changelog.outputs.changes }}
+          draft: true
+          prerelease: false
+
+          files: |
+            release-assets/*.exe
+            release-assets/*.zip
+            release-assets/*.sha256
+            release-assets/*.apk
+            release-assets/*.tgz
+            release-assets/*.rpm
+            release-assets/*.deb

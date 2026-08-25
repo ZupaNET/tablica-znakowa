@@ -638,7 +638,7 @@ static void service_menu_display_page_render(ServiceMenu *menu, const DisplayCon
 
 static void service_menu_license_page_render(ServiceMenu *menu, const DisplayContext *display)
 {
-    display_draw_line_on_back_buffer(display, 0, APP_NAME);
+    display_draw_line_on_back_buffer(display, 0, APP_NAME " v" APP_VERSION_STRING);
     display_draw_line_on_back_buffer(display, 1, "Copyright (c) 2026 " APP_COMPANY);
     display_draw_line_on_back_buffer(display, 2, "Licensed under GNU GPL-2.0-only");
 

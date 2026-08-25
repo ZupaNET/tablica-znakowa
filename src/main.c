@@ -2,7 +2,7 @@
 /*
  * Tablica Znakowa
  *
- * Copyright (C) 2026 ŻupaNET Development <devel@zupanet.pl>
+ * Copyright (C) 2026 ŻupaNET Development <dev@zupanet.pl>
  */
 
 #define SDL_MAIN_USE_CALLBACKS 1

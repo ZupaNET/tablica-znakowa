@@ -31,7 +31,7 @@ Tablica Znakowa is a simple, lightweight, and open-source emulator of the LED di
 - Small app size and few dependencies!
 
 **Note!** Tablica Znakowa is only an emulator! It has no memory of its own and cannot display anything on its own.
-For full functionality, you’ll also need a client app: *Pieśni* or *Edytor Pieśni* from MKEiA, or [*Kontroler*]([http://192.168.40.2:3000/ZupaNET/tablica](https://github.com/ZupaNET/tablica-znakowa-controller)) from ŻupaNET Development.
+For full functionality, you’ll also need a client app: *Pieśni* or *Edytor Pieśni* from MKEiA, or [*Kontroler*](https://github.com/ZupaNET/tablica-znakowa-controller) from ŻupaNET Development.
 
 <p align=center>
   <img height="128" alt="2" src="./fastlane/metadata/android/pl-PL/images/tvScreenshots/02.png" />

@@ -26,7 +26,7 @@ przez firmę MKEiA do wyświetlania pieśni kościelnych.
 - Niewielki rozmiar aplikacji i mała liczba zależności!
 
 **Uwaga!** Tablica Znakowa to jedynie emulator! Nie posiada żadnej pamięci i nie pozwala wyświetlać nic sam z siebie.
-Do pełnego działania wymagana jest również aplikacja kliencka: *Pieśni* lub *Edytor Pieśni* od MKEiA albo [*Kontroler*]([http://192.168.40.2:3000/ZupaNET/tablica](https://github.com/ZupaNET/tablica-znakowa-controller)) od
+Do pełnego działania wymagana jest również aplikacja kliencka: *Pieśni* lub *Edytor Pieśni* od MKEiA albo [*Kontroler*](https://github.com/ZupaNET/tablica-znakowa-controller) od
 ŻupaNET Development.
 
 <p align=center>

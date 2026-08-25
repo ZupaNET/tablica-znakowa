@@ -49,7 +49,7 @@ static const float FONT_SIZES[] =
 {
     8.0f,   // MiniSet2
     8.0f,   // MiniForma2
-    11.7f,  // FreeSans is not necessary fully metric-correct with MSSans, should be 12
+    11.8f,  // FreeSans is not necessary fully metric-correct with MSSans, should be 12
     8.0f,   // Monocraft
     8.0f    // CozetteVector
 };

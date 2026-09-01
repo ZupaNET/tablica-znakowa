@@ -108,6 +108,7 @@ endif()
 
 target_compile_definitions(tablica PRIVATE
 		APP_NAME="${APP_NAME}"
+		APP_PACKAGE_NAME="${APP_PACKAGE_NAME}"
 		APP_COMPANY="${APP_COMPANY}"
 		APP_VERSION_STRING="${APP_VERSION_STRING}"
 		APP_VERSION_MAJOR=${APP_VERSION_MAJOR}
@@ -193,7 +194,7 @@ if(WIN32)
 	)
 
 	install(
-		DIRECTORY ${CMAKE_SOURCE_DIR}/resources/common/
+		DIRECTORY "${CMAKE_SOURCE_DIR}/resources/common/"
 		DESTINATION resources
 	)
 
@@ -209,12 +210,12 @@ else()
 
 	install(
 		TARGETS tablica
-		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+		RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
 	)
 
 	install(
-		DIRECTORY ${CMAKE_SOURCE_DIR}/resources/common/
-		DESTINATION ${CMAKE_INSTALL_DATADIR}/tablica
+		DIRECTORY "${CMAKE_SOURCE_DIR}/resources/common/"
+		DESTINATION "${CMAKE_INSTALL_DATADIR}/${APP_PACKAGE_NAME}"
 	)
 
 endif()

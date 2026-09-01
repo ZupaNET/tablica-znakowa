@@ -109,7 +109,7 @@ const char *platform_get_resource_path(const char *relative_path)
         resource_path,
         sizeof(resource_path),
         "%s%s",
-        "/usr/local/share/tablica/",
+        "/usr/local/share/"APP_PACKAGE_NAME"/",
         relative_path
     );
 
@@ -121,7 +121,7 @@ const char *platform_get_resource_path(const char *relative_path)
         resource_path,
         sizeof(resource_path),
         "%s%s",
-        "/usr/share/tablica/",
+        "/usr/share/"APP_PACKAGE_NAME"/",
         relative_path
     );
 

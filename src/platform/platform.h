@@ -11,6 +11,7 @@
 #include <SDL3/SDL.h>
 
 void platform_init();
+void platform_sdl_postinit(void *data);
 void platform_shutdown();
 
 SDL_IOStream *platform_open_resource(const char* relative_path);

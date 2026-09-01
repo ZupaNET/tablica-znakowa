@@ -5,13 +5,64 @@
  * Copyright (C) 2026 ŻupaNET Development <dev@zupanet.pl>
  */
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include "../platform.h"
+#include "common/constants.h"
+#include "state/app_state.h"
 
 static char resource_path[1024];
 static char config_path[1024];
 
+static SDL_Surface* load_image(const char *filename)
+{
+    int width, height, channels;
+
+    unsigned char *pixels = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
+    if (!pixels)
+        return nullptr;
+
+    SDL_Surface *surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA32);
+    if (!surface)
+    {
+        stbi_image_free(pixels);
+        return nullptr;
+    }
+
+    SDL_LockSurface(surface);
+
+    for (int y = 0; y < height; y++)
+    {
+        SDL_memcpy(
+            (Uint8*)surface->pixels + y * surface->pitch,
+            pixels + y * width * 4,
+            width * 4
+        );
+    }
+
+    SDL_UnlockSurface(surface);
+
+    stbi_image_free(pixels);
+
+    return surface;
+}
+
 void platform_init()
 {
+}
+
+void platform_sdl_postinit(void *data)
+{
+    AppState *app = (AppState *)data;
+    SDL_Surface* icon = load_image(platform_get_resource_path(PROGRAM_ICON_PATH));
+    if (icon)
+    {
+        SDL_SetWindowIcon(app->window, icon);
+        SDL_DestroySurface(icon);
+    }
+    else
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Nie można poprawnie załadować ikony programu: %s\n", SDL_GetError());
 }
 
 void platform_shutdown()

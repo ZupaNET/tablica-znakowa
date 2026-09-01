@@ -9,8 +9,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 
 #include "config/config.h"
 #include "display/display.h"
@@ -27,39 +25,6 @@ static void print_header()
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"       ┃┏┛┃┃┃┣┻┓┣╸ ┃┣━┫      \n");
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"       ┗┛ ╹ ╹╹ ╹┗━╸╹╹ ╹      \n");
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,"\n");
-}
-
-static SDL_Surface* load_image(const char *filename)
-{
-    int width, height, channels;
-
-    unsigned char *pixels = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
-    if (!pixels)
-        return nullptr;
-
-    SDL_Surface *surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA32);
-    if (!surface)
-    {
-        stbi_image_free(pixels);
-        return nullptr;
-    }
-
-    SDL_LockSurface(surface);
-
-    for (int y = 0; y < height; y++)
-    {
-        SDL_memcpy(
-            (Uint8*)surface->pixels + y * surface->pitch,
-            pixels + y * width * 4,
-            width * 4
-        );
-    }
-
-    SDL_UnlockSurface(surface);
-
-    stbi_image_free(pixels);
-
-    return surface;
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
@@ -86,16 +51,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można utworzyć okna i silnika renderującego: %s\n", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-#ifndef SDL_PLATFORM_WINDOWS
-    SDL_Surface* icon = load_image(platform_get_resource_path(PROGRAM_ICON_PATH));
-    if (icon)
-    {
-        SDL_SetWindowIcon(app->window, icon);
-        SDL_DestroySurface(icon);
-    }
-    else
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Nie można poprawnie załadować ikony programu: %s\n", SDL_GetError());
-#endif
+
+    platform_sdl_postinit(app);
 
     if (!display_init(&app->display))
         return SDL_APP_FAILURE;

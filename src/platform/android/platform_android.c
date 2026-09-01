@@ -14,6 +14,10 @@ void platform_init()
 {
 }
 
+void platform_sdl_postinit(void *data)
+{
+}
+
 void platform_shutdown()
 {
 }

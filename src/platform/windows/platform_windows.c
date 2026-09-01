@@ -35,6 +35,10 @@ void platform_init()
     detach_console_if_owned();
 }
 
+void platform_sdl_postinit(void *data)
+{
+}
+
 void platform_shutdown()
 {
 }

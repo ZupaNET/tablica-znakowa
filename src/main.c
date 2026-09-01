@@ -117,6 +117,10 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     AppState *app = (AppState *)appstate;
 
+    /* Only draw when the semaphore is signaled */
+    if (!SDL_WaitSemaphoreTimeout(app->display.buffer_ready_semaphore, DISPLAY_SEMAPHORE_TIMEOUT))
+        return SDL_APP_CONTINUE;
+
     /* Clear screen */
     SDL_SetRenderDrawColor(app->renderer, app->config.background_color.r, app->config.background_color.g, app->config.background_color.b, 255);
     SDL_RenderClear(app->renderer);

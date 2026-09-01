@@ -32,6 +32,8 @@ typedef struct
     DisplayState *front_buffer;
     DisplayState *back_buffer;
     SDL_Mutex *mutex;
+
+    SDL_Semaphore *buffer_ready_semaphore;
 } DisplayContext;
 
 bool display_init(DisplayContext *display);

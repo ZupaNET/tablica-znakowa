@@ -61,6 +61,7 @@ bool display_init(DisplayContext *display)
     display_buffer_init(&display->buffer1, display->fonts[0]);
     display_buffer_init(&display->buffer2, display->fonts[0]);
     display->mutex = SDL_CreateMutex();
+    display->buffer_ready_semaphore = SDL_CreateSemaphore(1);
     display->back_buffer = &display->buffer1;
     display->front_buffer = &display->buffer2;
 
@@ -103,6 +104,7 @@ void display_swap_buffers(DisplayContext *display)
     display->back_buffer = tmp;
 
     SDL_UnlockMutex(display->mutex);
+    SDL_SignalSemaphore(display->buffer_ready_semaphore);
 }
 
 void display_commit_brightness(const DisplayContext *display)
@@ -112,6 +114,7 @@ void display_commit_brightness(const DisplayContext *display)
     display->front_buffer->brightness = display->back_buffer->brightness;
 
     SDL_UnlockMutex(display->mutex);
+    SDL_SignalSemaphore(display->buffer_ready_semaphore);
 }
 
 void display_draw_line_on_back_buffer(const DisplayContext *display, const int line_number, const char *line)

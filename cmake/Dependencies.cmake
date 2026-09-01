@@ -8,6 +8,11 @@ set(USE_SYSTEM_SDL3 OFF)
 set(USE_SYSTEM_SDL3_TTF OFF)
 set(USE_SYSTEM_SDL3_NET OFF)
 
+option(TABLICA_USE_SDL3_NET_WORKAROUND
+        "Statically link SDL3_net on systems without SDL3_net in its repositories"
+        ON
+)
+
 # --------------------------------------
 # Try system libraries on Linux
 # --------------------------------------
@@ -83,11 +88,23 @@ if(NOT USE_SYSTEM_SDL3_NET)
 
     message(STATUS "Fetching SDL3_net")
 
+    # Build SDL3_net statically if SDL3 and SDL3_ttf is from the system
+    # we are just assuming that the certain OSes does not have SDL3_net in repo
+    if(NOT ANDROID AND NOT WIN32 AND USE_SYSTEM_SDL3 AND USE_SYSTEM_SDL3_TTF AND TABLICA_USE_SDL3_NET_WORKAROUND)
+        set(_OLD_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")
+        set(BUILD_SHARED_LIBS OFF)
+    endif()
+
     FetchContent_Declare(
         SDL3_net
         GIT_REPOSITORY https://github.com/libsdl-org/SDL_net.git
         GIT_TAG main
     )
+
+    if(NOT ANDROID AND NOT WIN32 AND USE_SYSTEM_SDL3 AND USE_SYSTEM_SDL3_TTF AND TABLICA_USE_SDL3_NET_WORKAROUND)
+        set(BUILD_SHARED_LIBS "${_OLD_BUILD_SHARED_LIBS}")
+        unset(_OLD_BUILD_SHARED_LIBS)
+    endif()
 
     FetchContent_MakeAvailable(SDL3_net)
 

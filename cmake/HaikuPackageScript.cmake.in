@@ -1,0 +1,73 @@
+# --------------------------------------
+# CPack External
+# --------------------------------------
+
+set(HAIKU_PACKAGE_TREE "${CPACK_TOPLEVEL_DIRECTORY}/haiku-package")
+set(HAIKU_PACKAGE_OUTPUT "${CPACK_TOPLEVEL_DIRECTORY}/@CPACK_PACKAGE_FILE_NAME@.hpkg")
+
+# --------------------------------------
+# Prepare package tree
+# --------------------------------------
+
+file(REMOVE_RECURSE "${HAIKU_PACKAGE_TREE}")
+file(MAKE_DIRECTORY "${HAIKU_PACKAGE_TREE}")
+
+file(COPY "${CPACK_TEMPORARY_DIRECTORY}/" DESTINATION "${HAIKU_PACKAGE_TREE}")
+
+# --------------------------------------
+# Add Haiku package metadata
+# --------------------------------------
+
+file(COPY "@HAIKU_PACKAGE_INFO@" DESTINATION "${HAIKU_PACKAGE_TREE}")
+
+# --------------------------------------
+# Create Deskbar shotcut
+# --------------------------------------
+
+set(HAIKU_DESKBAR_DIR "${HAIKU_PACKAGE_TREE}/data/deskbar/menu/Applications")
+set(HAIKU_APP "${HAIKU_PACKAGE_TREE}/apps/@APP_PACKAGE_NAME@/tablica")
+set(HAIKU_DESKBAR_LINK "${HAIKU_DESKBAR_DIR}/@APP_NAME@")
+
+file(MAKE_DIRECTORY "${HAIKU_DESKBAR_DIR}")
+
+set(HAIKU_APP_RELATIVE_PATH "../../../../apps/@APP_PACKAGE_NAME@/tablica")
+
+execute_process(
+    COMMAND
+        "${CMAKE_COMMAND}"
+        -E create_symlink
+        "${HAIKU_APP_RELATIVE_PATH}"
+        "${HAIKU_DESKBAR_LINK}"
+    RESULT_VARIABLE HAIKU_SYMLINK_RESULT
+)
+
+if(NOT HAIKU_SYMLINK_RESULT EQUAL 0)
+    message(FATAL_ERROR
+        "Failed to create Haiku Deskbar symlink: "
+        "${HAIKU_DESKBAR_LINK} -> ${HAIKU_APP_RELATIVE_PATH}"
+    )
+endif()
+
+# --------------------------------------
+# Create HPKG
+# --------------------------------------
+
+execute_process(
+    COMMAND
+        "@HAIKU_PACKAGE@"
+        create
+        -C
+        "${HAIKU_PACKAGE_TREE}"
+        "${HAIKU_PACKAGE_OUTPUT}"
+    RESULT_VARIABLE HAIKU_PACKAGE_RESULT
+    COMMAND_ECHO STDOUT
+)
+
+if(NOT HAIKU_PACKAGE_RESULT EQUAL 0)
+    message(FATAL_ERROR
+        "Haiku package creation failed "
+        "(exit code ${HAIKU_PACKAGE_RESULT})"
+    )
+endif()
+
+set(CPACK_EXTERNAL_BUILT_PACKAGES "${HAIKU_PACKAGE_OUTPUT}")

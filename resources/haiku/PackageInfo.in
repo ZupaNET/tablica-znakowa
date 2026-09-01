@@ -1,0 +1,31 @@
+name @APP_PACKAGE_NAME@
+version @APP_VERSION_STRING@-1
+architecture @HAIKU_PACKAGE_ARCH@
+
+summary "@APP_NAME@"
+description "@CPACK_PACKAGE_DESCRIPTION_SUMMARY@"
+
+vendor "@APP_COMPANY@"
+packager "@APP_COMPANY@"
+
+copyrights {
+	"@HAIKU_PACKAGE_COPYRIGHT@"
+}
+
+licenses {
+	"@HAIKU_PACKAGE_LICENSE@"
+}
+
+provides {
+	@HAIKU_PACKAGE_NAME@ = @APP_VERSION_STRING@-1
+}
+
+urls {
+	"@CPACK_PACKAGE_HOMEPAGE_URL@"
+}
+
+requires {
+	haiku
+	libsdl3
+	sdl3_ttf
+}

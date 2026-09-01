@@ -1,0 +1,17 @@
+resource app_signature "application/x-vnd.@APP_PACKAGE_NAME@";
+
+resource app_name_catalog_entry "x-vnd.@APP_PACKAGE_NAME@:System name:@APP_NAME@";
+
+resource app_version {
+	major      = @APP_VERSION_MAJOR@,
+	middle     = @APP_VERSION_MINOR@,
+	minor      = @APP_VERSION_PATCH@,
+	variety    = B_APPV_ALPHA,
+	internal   = 0,
+	short_info = "@APP_NAME@",
+	long_info  = "Copyright (C) 2026 @APP_COMPANY@"
+};
+
+resource app_flags B_SINGLE_LAUNCH;
+
+@TABLICA_HAIKU_ICON@

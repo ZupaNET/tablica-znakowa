@@ -32,9 +32,13 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # --------------------------------------
 set(APP_NAME "Tablica Znakowa")
 set(APP_COMPANY "ŻupaNET Development")
+if(HAIKU)
+string(REGEX REPLACE "[ \t]" "" APP_PACKAGE_NAME "${APP_NAME}")
+else()
 string(TOLOWER "${APP_NAME}" APP_PACKAGE_NAME)
 string(REGEX REPLACE "[^a-z0-9]+" "-" APP_PACKAGE_NAME "${APP_PACKAGE_NAME}")
 string(REGEX REPLACE "^-|-$" "" APP_PACKAGE_NAME "${APP_PACKAGE_NAME}")
+endif()
 
 # --------------------------------------
 # Dependencies
@@ -63,6 +67,10 @@ elseif(ANDROID)
 elseif(LINUX)
 	file(GLOB PLATFORM_SOURCES CONFIGURE_DEPENDS
 		src/platform/linux/*.c
+	)
+elseif(HAIKU)
+	file(GLOB PLATFORM_SOURCES CONFIGURE_DEPENDS
+		src/platform/haiku/*.c
 	)
 endif()
 
@@ -156,6 +164,12 @@ if(UNIX AND NOT APPLE)
 endif()
 
 # --------------------------------------
+# Haiku resources
+# --------------------------------------
+
+include(cmake/HaikuResources.cmake)
+
+# --------------------------------------
 # Windows resources
 # --------------------------------------
 
@@ -204,6 +218,18 @@ if(WIN32)
 		$<TARGET_FILE:SDL3_ttf::SDL3_ttf>
 		$<TARGET_FILE:SDL3_net::SDL3_net>
 		DESTINATION .
+	)
+
+elseif(HAIKU)
+
+	install(
+			TARGETS tablica
+			RUNTIME DESTINATION "apps/${APP_PACKAGE_NAME}"
+	)
+
+	install(
+			DIRECTORY "${CMAKE_SOURCE_DIR}/resources/common/"
+			DESTINATION "apps/${APP_PACKAGE_NAME}/resources"
 	)
 
 else()
@@ -293,8 +319,12 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64")
 	set(CPACK_INNOSETUP_ARCHITECTURE "arm64")
 endif()
 
+# Haiku HPKG
+include(cmake/HaikuPackage.cmake)
 
-set(CPACK_GENERATOR "DEB;RPM;TGZ;ZIP;INNOSETUP")
+set(CPACK_GENERATOR "DEB;RPM;TGZ;ZIP;INNOSETUP;EXTERNAL")
+if(NOT HAIKU)
 set(CPACK_STRIP_FILES TRUE)
+endif()
 
 include(CPack)

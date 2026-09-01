@@ -144,7 +144,7 @@ Niestety na dzień 27.07.2026, RHEL i pochodne w ogóle nie udostępniają SDL3,
 
 
 ### Właściwy proces - Windows, Linux i Haiku
-1. Klonujemy repozytorium: `git clone http://192.168.40.2:3000/ZupaNET-publiczne/vmkeia.git`
+1. Klonujemy repozytorium: `git clone https://github.com/ZupaNET/tablica-znakowa.git`
 2. Wywołujemy odpowiedni preset CMake z katalogu głównego projektu: `cmake --preset <nazwa>` (listę można wyświetlić: `cmake --list-presets`). Dodając ewentualnie `-DSDL_UNIX_CONSOLE_BUILD=ON`
 3. Kompilujemy projekt: `cmake --build --preset <nazwa>` (listę można wyświetlić: `cmake --build --list-presets`)
 
@@ -161,7 +161,7 @@ Polecenie to **NIE** zainstaluje bibliotek SDL w `/usr/lib64/` jeżeli te zosta�
 tych dostarczanych z dystrybucją. Należy je ręcznie przekopiować do odpowiedniego katalogu.
 
 ### Właściwy proces - Android
-1. Klonujemy repozytorium: `git clone http://192.168.40.2:3000/ZupaNET-publiczne/vmkeia.git`
+1. Klonujemy repozytorium: `git clone https://github.com/ZupaNET/tablica-znakowa.git`
 2. Uruchamiamy terminal w repozytorium ze skonfigurowanym środowiskiem Android SDK, a także ustawionymi zmiennymi `ANDROID_KEYSTORE`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` oraz `ANDROID_KEY_PASSWORD`
 3. Przechodzimy do katalogu `android` i wydajemy polecenie: `gradlew assembleRelease` lub `gradlew assembleDebug` (dla wersji Debug).
 4. W katalogu `app\build\outputs\apk\<debug/release>` zostanie wygenerowany plik APK na platformy `x86_64`, `arm64-v8a` oraz `armeabi-v7a`.

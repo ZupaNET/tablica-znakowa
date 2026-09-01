@@ -8,6 +8,9 @@ set(USE_SYSTEM_SDL3 OFF)
 set(USE_SYSTEM_SDL3_TTF OFF)
 set(USE_SYSTEM_SDL3_NET OFF)
 
+set(TABLICA_SDL3_VENDORED_VERSION "3.4.14" CACHE STRING "Version of the vendored SDL3 version")
+set(TABLICA_SDL3_TTF_VENDORED_VERSION "3.2.2" CACHE STRING "Version of the vendored SDL3_ttf version")
+set(TABLICA_SDL3_NET_VENDORED_VERSION "3.2.0" CACHE STRING "Version of the vendored SDL3_net version")
 option(TABLICA_USE_SDL3_NET_WORKAROUND
         "Statically link SDL3_net on systems without SDL3_net in its repositories"
         ON
@@ -55,8 +58,7 @@ if(NOT USE_SYSTEM_SDL3)
 
     FetchContent_Declare(
         SDL3
-        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG main
+        URL https://github.com/libsdl-org/SDL/releases/download/release-${TABLICA_SDL3_VENDORED_VERSION}/SDL3-${TABLICA_SDL3_VENDORED_VERSION}.tar.gz
     )
 
     FetchContent_MakeAvailable(SDL3)
@@ -75,7 +77,8 @@ if(NOT USE_SYSTEM_SDL3_TTF)
     FetchContent_Declare(
         SDL3_ttf
         GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
-        GIT_TAG main
+        GIT_TAG release-${TABLICA_SDL3_TTF_VENDORED_VERSION}
+        GIT_SHALLOW ON
     )
 
     FetchContent_MakeAvailable(SDL3_ttf)
@@ -97,8 +100,7 @@ if(NOT USE_SYSTEM_SDL3_NET)
 
     FetchContent_Declare(
         SDL3_net
-        GIT_REPOSITORY https://github.com/libsdl-org/SDL_net.git
-        GIT_TAG main
+        URL https://github.com/libsdl-org/SDL_net/releases/download/release-${TABLICA_SDL3_NET_VENDORED_VERSION}/SDL3_net-${TABLICA_SDL3_NET_VENDORED_VERSION}.tar.gz
     )
 
     if(NOT ANDROID AND NOT WIN32 AND USE_SYSTEM_SDL3 AND USE_SYSTEM_SDL3_TTF AND TABLICA_USE_SDL3_NET_WORKAROUND)

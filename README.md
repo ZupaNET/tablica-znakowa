@@ -128,6 +128,14 @@ if you’re interested in generating installers.
 If we are compiling SDL3 for X11/Wayland from source as part of the project, we must also install the required dependencies listed on the [libSDL wiki](https://wiki.libsdl.org/SDL3/README-linux#build-dependencies).
 If you’re not interested in X11/Wayland, you can add the `-DSDL_UNIX_CONSOLE_BUILD=ON` option to the `cmake` command from step 2.
 
+#### Haiku
+
+```sh
+pkgman install cmake gcc ninja libsdl3_devel sdl3_ttf_devel
+```
+
+Also install `sdl3_net_devel` if available in repo.
+
 #### Debian / Ubuntu / Linux Mint and derivatives
 
 ```sh
@@ -145,7 +153,7 @@ sudo dnf install git gcc gcc-c++ cmake \
 If your distribution allows it, you can try installing SDL3 from the RPM repositories: `sudo dnf install SDL3-devel SDL3_ttf-devel SDL3_net-devel`.
 Unfortunately, as of July 27, 2026, RHEL and its derivatives do not provide SDL3 at all, while Fedora does.
 
-### The Correct Process - Windows and Linux
+### Compiling - Windows, Linux and Haiku
 1. Clone the repository: `git clone https://github.com/ZupaNET/tablica-znakowa.git`
 2. Run the appropriate CMake preset from the project's root directory: `cmake --preset <name>` (you can view the list with: `cmake --list-presets`). Optionally, add `-DSDL_UNIX_CONSOLE_BUILD=ON`
 3. Compile the project: `cmake --build --preset <name>` (you can view the list with: `cmake --build --list-presets`)
@@ -154,15 +162,15 @@ If everything goes well, the application will be built in the following director
 - Windows: `build/<preset>/bin`
 - Linux: the main executable and resources in `build/<preset>/bin`, and libraries in `build/<preset>/lib`
 
-To build DEB, RPM, TGZ (Linux), or ZIP packages, as well as an Inno Setup installer (Windows), navigate to the `build/<preset>/` directory,
-then run the command `cpack -G <package>`, where `<package>` can be **DEB**, **RPM**, **TGZ**, **ZIP**, or **INNOSETUP**.
+To build DEB, RPM, TGZ (Linux), HPKG, or ZIP packages, as well as an Inno Setup installer (Windows), navigate to the `build/<preset>/` directory,
+then run the command `cpack -G <package>`, where `<package>` can be **DEB**, **RPM**, **TGZ**, **ZIP**, **External** (HPKG for Haiku) or **INNOSETUP**.
 The built installer/package will be located in the same directory.
 
 On Linux systems, you can also install the application immediately by running the command `cmake --install build/<preset>`. **Note!**
 This command will **NOT** install the SDL libraries in `/usr/lib64/` if they were compiled as part of the project and you did not use
 the ones provided with the distribution. You must manually copy them to the appropriate directory.
 
-### The Correct Process - Android
+### Compiling - Android
 
 1. Clone the repository: `git clone https://github.com/ZupaNET/tablica-znakowa.git`
 2. Open a terminal in the repository with the Android SDK environment configured and the variables `ANDROID_KEYSTORE`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD` set

@@ -121,6 +121,12 @@ jeżeli interesuje nas generowanie instalatorów.
 Jeżeli kompilujemy SDL3 na X11/Wayland ze źródeł w ramach projektu musimy również doinstalować zależności potrzebne podane na [wiki libSDL](https://wiki.libsdl.org/SDL3/README-linux#build-dependencies).  
 Jeżeli nie interesuje nas X11/Wayland to możemy dodać opcję `-DSDL_UNIX_CONSOLE_BUILD=ON` do komendy `cmake` z punktu 2.
 
+#### Haiku
+```sh
+pkgman install cmake gcc ninja libsdl3_devel sdl3_ttf_devel
+```
+Zainstaluj również `sdl3_net_devel` jeżeli jest w repozytoriach.
+
 #### Debian / Ubuntu / Linux Mint i pochodne
 ```sh
 sudo apt install build-essential git make \
@@ -137,7 +143,7 @@ Jeżeli nasza dystrybucja na to pozwala, to można spróbować doinstalować SDL
 Niestety na dzień 27.07.2026, RHEL i pochodne w ogóle nie udostępniają SDL3, a Fedora już tak.
 
 
-### Właściwy proces - Windows i Linux
+### Właściwy proces - Windows, Linux i Haiku
 1. Klonujemy repozytorium: `git clone http://192.168.40.2:3000/ZupaNET-publiczne/vmkeia.git`
 2. Wywołujemy odpowiedni preset CMake z katalogu głównego projektu: `cmake --preset <nazwa>` (listę można wyświetlić: `cmake --list-presets`). Dodając ewentualnie `-DSDL_UNIX_CONSOLE_BUILD=ON`
 3. Kompilujemy projekt: `cmake --build --preset <nazwa>` (listę można wyświetlić: `cmake --build --list-presets`)
@@ -146,8 +152,8 @@ Jeżeli wszystko się uda, to aplikacja zostanie wybudowana w katalogu:
 - Windows: `build/<preset>/bin`
 - Linux: główny plik wykonywalny i zasoby `build/<preset>/bin`, a biblioteki `build/<preset>/lib`
 
-Aby wybudować paczki DEB, RPM, TGZ (Linux) czy ZIP oraz instalator Inno Setup (Windows) to należy przejść do katalogu `build/<preset>/`,
-a następnie wydać polecenie `cpack -G <paczka>`, gdzie `<paczka>` to może być **DEB**, **RPM**, **TGZ**, **ZIP**, **INNOSETUP**. 
+Aby wybudować paczki DEB, RPM, TGZ (Linux), HPKG czy ZIP oraz instalator Inno Setup (Windows) to należy przejść do katalogu `build/<preset>/`,
+a następnie wydać polecenie `cpack -G <paczka>`, gdzie `<paczka>` to może być **DEB**, **RPM**, **TGZ**, **ZIP**, **External** (HPKG w przypadku HAIKU), **INNOSETUP**. 
 Wybudowany instalator/paczka będzie w tym samym katalogu.
 
 Na systemach Linux możemy również zainstalować od razu aplikację wykonując polecenie `cmake --install build/<preset>`. **Uwaga!**

@@ -77,7 +77,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     if (!config_load(platform_get_config_path(CONFIG_FILENAME), &app->config))
         return SDL_APP_FAILURE;
 
-#ifndef PLATFORM_ANDROID
+#ifndef SDL_PLATFORM_ANDROID
     if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION_STRING, 1152 + app->config.display_padding, 768 - app->config.display_padding, app->config.display_fullscreen ? (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS) : SDL_WINDOW_RESIZABLE, &app->window, &app->renderer))
 #else
     if (!SDL_CreateWindowAndRenderer(APP_NAME " " APP_VERSION_STRING, 0, 0, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS, &app->window, &app->renderer))
@@ -86,7 +86,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"Nie można utworzyć okna i silnika renderującego: %s\n", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-#ifndef PLATFORM_WINDOWS
+#ifndef SDL_PLATFORM_WINDOWS
     SDL_Surface* icon = load_image(platform_get_resource_path(PROGRAM_ICON_PATH));
     if (icon)
     {

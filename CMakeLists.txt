@@ -50,6 +50,24 @@ file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS
     src/*.c
 )
 
+list(FILTER APP_SOURCES EXCLUDE REGEX "/platform/")
+
+if(WIN32)
+	file(GLOB PLATFORM_SOURCES CONFIGURE_DEPENDS
+		src/platform/windows/*.c
+	)
+elseif(ANDROID)
+	file(GLOB PLATFORM_SOURCES CONFIGURE_DEPENDS
+		src/platform/android/*.c
+	)
+elseif(LINUX)
+	file(GLOB PLATFORM_SOURCES CONFIGURE_DEPENDS
+		src/platform/linux/*.c
+	)
+endif()
+
+list(APPEND APP_SOURCES ${PLATFORM_SOURCES})
+
 if(ANDROID)
 
 	add_library(tablica SHARED
@@ -83,31 +101,6 @@ if(NOT ANDROID)
 	)
 
 endif()
-
-# --------------------------------------
-# Platform definitions
-# --------------------------------------
-
-if(ANDROID)
-
-	target_compile_definitions(tablica PRIVATE
-			PLATFORM_ANDROID
-	)
-
-elseif(WIN32)
-
-	target_compile_definitions(tablica PRIVATE
-			PLATFORM_WINDOWS
-	)
-
-elseif(UNIX)
-
-	target_compile_definitions(tablica PRIVATE
-			PLATFORM_LINUX
-	)
-
-endif()
-
 
 # --------------------------------------
 # Application info definitions

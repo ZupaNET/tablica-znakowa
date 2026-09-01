@@ -5,8 +5,6 @@
  * Copyright (C) 2026 ŻupaNET Development <dev@zupanet.pl>
  */
 
-#ifdef PLATFORM_WINDOWS
-
 #include <SDL3/SDL_stdinc.h>
 #include <windows.h>
 #include "../platform.h"
@@ -88,6 +86,3 @@ const char *platform_get_config_path(const char *filename)
 
     return config_path;
 }
-
-
-#endif

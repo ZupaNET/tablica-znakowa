@@ -5,8 +5,6 @@
  * Copyright (C) 2026 ŻupaNET Development <dev@zupanet.pl>
  */
 
-#ifdef PLATFORM_LINUX
-
 #include "../platform.h"
 
 static char resource_path[1024];
@@ -104,5 +102,3 @@ const char *platform_get_config_path(const char *filename)
 
     return config_path;
 }
-
-#endif

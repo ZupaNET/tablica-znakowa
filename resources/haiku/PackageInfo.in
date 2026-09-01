@@ -17,7 +17,7 @@ licenses {
 }
 
 provides {
-	@HAIKU_PACKAGE_NAME@ = @APP_VERSION_STRING@-1
+	@APP_PACKAGE_NAME@ = @APP_VERSION_STRING@-1
 }
 
 urls {

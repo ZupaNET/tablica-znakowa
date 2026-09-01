@@ -816,10 +816,6 @@ jobs:
           fileName: 'release_key.jks'
           fileDir: 'android/app/'
           encodedString: ${{ secrets.SIGNING_KEY }}
-          
-      - name: Replace CMake version in CMakeLists.txt
-        run: |
-          sed -i 's/3.30/3.22/g' CMakeLists.txt
 
       - name: Build Release APK
         run: |
